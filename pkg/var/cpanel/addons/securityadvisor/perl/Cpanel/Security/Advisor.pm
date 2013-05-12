@@ -13,9 +13,9 @@ use Cpanel::Config::LoadCpConf ();
 use Cpanel::Logger             ();
 
 our $ADVISE_GOOD = 1;
-our $ADVISE_WARN = 2;
-our $ADVISE_BAD  = 4;
-our $ADVISE_INFO = 8;
+our $ADVISE_INFO = 2;
+our $ADVISE_WARN = 4;
+our $ADVISE_BAD  = 8;
 
 sub new {
     my ($class) = @_;
