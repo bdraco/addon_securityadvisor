@@ -22,6 +22,21 @@ sub _check_for_unjailed_users {
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
     if ( !-x '/usr/bin/cagefsctl' ) {
+        if ( -e '/var/cpanel/conf/jail/flags/mount_usr_bin_suid' ) {
+            $security_advisor_obj->add_advise(
+                {
+                    'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+                    'text'       => ['Jailshell is mounting /usr/bin suid, which allows escaping the jail via crontab.'],
+                    'suggestion' => [
+                        'Disable “Jailed /usr/bin mounted suid" in the “[output,url,_1,Tweak Settings,_2,_3]” area',
+                        $security_advisor_obj->security_token() . "/scripts2/tweaksettings?find=jailmountusrbinsuid",
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
+        }
+
         Cpanel::PwCache::init_passwdless_pwcache();
         my %cpusers = map { $_ => undef } Cpanel::Config::Users::getcpusers();
 
