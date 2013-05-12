@@ -41,7 +41,7 @@ sub _check_for_nobody_tracking {
         );
     }
 
-    if ( $security_advisor_obj->{'cpconf'}->{'smtpmailgidonly'} ) {
+    if ( -e '/var/cpanel/smtpgidonlytweak' ) {
         $security_advisor_obj->add_advise(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
