@@ -1,0 +1,34 @@
+#!/usr/local/cpanel/3rdparty/bin/perl
+# cpanel - install                                Copyright(c) 2013 cPanel, Inc.
+#                                                           All rights Reserved.
+# copyright@cpanel.net                                         http://cpanel.net
+# This code is subject to the cPanel license. Unauthorized copying is prohibited
+
+use Cpanel::Version ();
+
+if ( $Cpanel::Version::MAJORVERSION < 11.37 ) {
+    #
+    #  Note: probably works fine on 11.34+ but untested
+    #  and its going to advise you to enable security features
+    #  that are not available on older versions.  We could 
+    #  add versioning in the future
+    #   
+    print "This addon requires 11.37 or later.\n";
+    exit(1);
+}
+
+install( "-o", "root", "-g", "wheel", "-m" . "0700", "usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi", "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi" );
+
+mkdir( "/var/cpanel/addons",                 0755 );
+mkdir( "/var/cpanel/addons/securityadvisor", 0700 );
+
+system "/usr/bin/rsync", "-a", "var/cpanel/addons/securityadvisor/", "/var/cpanel/addons/securityadvisor/";
+
+print "cPanel Security Advisor installed into WHM.\n";
+
+exit(0);
+
+sub install {
+    system( "/usr/bin/install", @_ );
+}
+

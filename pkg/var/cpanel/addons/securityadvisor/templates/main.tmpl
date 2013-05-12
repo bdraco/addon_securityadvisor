@@ -1,0 +1,45 @@
+[% WRAPPER '_defwrapper.tmpl'
+  header = 'cPanel Security Advisor'
+ -%]
+[% PROCESS '_ajaxapp_styles.tmpl' -%]
+[% PROCESS '_ajaxapp_header.tmpl' -%] 
+[% USE Whostmgr -%]
+[% USE JSON %]
+[% USE Dumper %]
+
+<div>
+
+<script>
+// Imports
+var YAHOO = window.YAHOO;
+var CPANEL = window.CPANEL;
+var DOM = YAHOO.util.Dom;
+var EVENT = YAHOO.util.Event;
+var Page_Notice = CPANEL.widgets.Page_Notice;
+</script>
+
+<div id="securityadvise"></div>
+
+
+[% IF data.advise %]
+  [% FOR module IN data.advise.values %]
+    [% FOR func IN module.values %]
+        [% FOR item IN func %]
+          <script>
+              new Page_Notice( {
+                        level:  [% item.type %] == 4 ? "error" : [% item.type %] == 1 ? "success" : [% item.type %] == 2 ? "warn" : "info",
+                         container: DOM.get('securityadvise'),
+                        content: [% locale.maketext_ref(item.text).json %] + "<blockquote>" + [% locale.maketext_ref(item.suggestion).json %] + "</blockquote>"
+                } ).show();
+          </script>
+      [% END %]
+    [% END %]
+  [% END %]
+[% ELSE %]
+  No advise
+[% END %]
+
+</div>
+
+[% PROCESS '_ajaxapp_footer.tmpl' -%]
+[% END #wrapper -%]
