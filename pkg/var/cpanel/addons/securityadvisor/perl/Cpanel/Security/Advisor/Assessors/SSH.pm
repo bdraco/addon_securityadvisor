@@ -49,7 +49,7 @@ sub _check_for_ssh_settings {
         $security_advisor_obj->add_advise(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['SSH direct root logins as permitted.'],
+                'text'       => ['SSH direct root logins are permitted.'],
                 'suggestion' => [
                     'Manually edit /etc/ssh/sshd_config and change PermitRootLogin to “no”, then restart SSH in the “[output,url,_1,Restart SSH,_2,_3]” area',
                     $security_advisor_obj->security_token() . "/scripts/ressshd",
