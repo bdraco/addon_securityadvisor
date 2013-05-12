@@ -57,7 +57,7 @@ sub _check_for_nobody_tracking {
                 'text'       => ['Outbound SMTP connections are unrestricted.'],
                 'suggestion' => [
                     'Enable SMTP Restrictions in the “[output,url,_1,SMTP Restrictions,_2,_3]” area',
-                    $security_advisor_obj->security_token() . "/scripts/smtpmailgidonly",
+                    $security_advisor_obj->security_token() . "/scripts2/smtpmailgidonly",
                     'target',
                     '_blank'
                 ],
