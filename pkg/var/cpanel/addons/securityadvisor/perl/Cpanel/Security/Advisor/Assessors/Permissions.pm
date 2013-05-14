@@ -33,8 +33,7 @@ sub _check_for_unsafe_permissions {
     }
 
     # Warn if /etc/shadow has a user or group which is not root
-    my $uid = (stat('/etc/shadow'))[4];
-    my $gid = (stat('/etc/shadow'))[5];
+    my ($uid, $gid) = (stat('/etc/shadow'))[4,5];
 
     if ($uid != 0 or $gid != 0) {
         $security_advisor_obj->add_advise(
