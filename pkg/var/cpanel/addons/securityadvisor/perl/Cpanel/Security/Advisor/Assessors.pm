@@ -32,6 +32,18 @@ sub add_good_advise {
     $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD );
 }
 
+sub add_info_advise {
+    my ( $self, %opts ) = @_;
+
+    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_INFO );
+}
+
+sub add_warn_advise {
+    my ( $self, %opts ) = @_;
+
+    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_WARN );
+}
+
 sub add_bad_advise {
     my ( $self, %opts ) = @_;
 

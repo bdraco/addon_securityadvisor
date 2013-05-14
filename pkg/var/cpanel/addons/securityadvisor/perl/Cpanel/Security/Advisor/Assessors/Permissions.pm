@@ -14,41 +14,31 @@ sub generate_advise {
 }
 
 sub _check_for_unsafe_permissions {
-    return if ($^O ne 'linux');
+    return if ( $^O ne 'linux' );
 
     my ($self) = @_;
 
-    my $security_advisor_obj = $self->{'security_advisor_obj'};
-
-
     my %test_files = (
-        '/etc/shadow' => { 'perms' => '0600', 'uid' => 0, 'gid' => 0 },
-        '/etc/passwd' => { 'perms' => '0644', 'uid' => 0, 'gid' => 0 }
-        );
+        '/etc/shadow' => { 'perms' => 0600, 'uid' => 0, 'gid' => 0 },
+        '/etc/passwd' => { 'perms' => 0644, 'uid' => 0, 'gid' => 0 }
+    );
 
-    for my $file (keys %test_files) {
-        my $mode = (stat($file))[2] & 07777;
-        $mode = sprintf "%lo", $mode;
-        my ($uid,$gid) = (stat($file))[4,5];
-
-
-        if ($mode != $test_files{$file}->{'perms'} ) {
-            $security_advisor_obj->add_advise(
-                {
-                    'type' => $Cpanel::Security::Advisor::ADVISE_WARN,
-                    'text' => ["$file has non default permissions"],
-                    'suggestion' => ["Review the permissions on $file to ensure they are safe"]
-                }
+    for my $file ( keys %test_files ) {
+        my $expected_attributes = $test_files{$file};
+        my ( $current_mode, $uid, $gid ) = ( stat($file) )[ 2, 4, 5 ];
+        if ( ( $expected_attributes->{'perms'} & 07777 ) != ( $current_mode & 07777 ) ) {
+            my $expected_mode = sprintf( "%04o", $expected_attributes->{'perms'} );
+            my $actual_mode   = sprintf( "%04o", $current_mode & 07777 );
+            $self->add_warn_advise(
+                'text'       => ["$file has non default permissions.  Expected: $expected_mode, Actual: $actual_mode."],
+                'suggestion' => ["Review the permissions on $file to ensure they are safe"]
             );
         }
 
-        if ($uid != $test_files{$uid} or $gid != $test_files{$gid}) {
-            $security_advisor_obj->add_advise(
-                {
-                    'type' => $Cpanel::Security::Advisor::ADVISE_WARN,
-                    'text' => ["$file has non root user and/or group"],
-                    'suggestion' => ["Review the ownership permissions on $file"]
-                }
+        if ( $uid != $expected_attributes->{'uid'} or $gid != $expected_attributes->{'gid'} ) {
+            $self->add_warn_advise(
+                'text'       => ["$file has non root user and/or group"],
+                'suggestion' => ["Review the ownership permissions on $file"]
             );
         }
     }
