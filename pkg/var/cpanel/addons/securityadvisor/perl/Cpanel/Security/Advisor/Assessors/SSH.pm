@@ -49,7 +49,7 @@ sub _check_for_ssh_settings {
         );
     }
     else {
-        $self->add_goof_advise(
+        $self->add_good_advise(
             'text' => ['SSH direct root logins are disabled.'],
         );
 
