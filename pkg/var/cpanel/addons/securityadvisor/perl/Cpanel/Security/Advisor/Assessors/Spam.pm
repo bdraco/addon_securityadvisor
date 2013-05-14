@@ -81,7 +81,7 @@ sub _check_for_nobody_tracking {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Apache is not being queried to determine the actual sender when mail originates from the “nobody” psuedo-user.'],
                 'suggestion' => [
-                    'Enable “Query Apache server status to determine the sender of email sent from processes running as nobody” in the “[output,url,_1,Exim Configuration Manager,_2,_3]” area\'s “Basic Editory”',
+                    'Enable “Query Apache server status to determine the sender of email sent from processes running as nobody” in the “[output,url,_1,Exim Configuration Manager,_2,_3]” area\'s “Basic Editor”',
                     $security_advisor_obj->security_token() . "/scripts2/displayeximconfforedit",
                     'target',
                     '_blank'
