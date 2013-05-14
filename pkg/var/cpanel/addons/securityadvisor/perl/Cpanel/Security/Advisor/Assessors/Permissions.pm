@@ -22,11 +22,11 @@ sub _check_for_unsafe_permissions {
 
     my @files = qw( /etc/shadow /etc/passwd );
 
-    # Warn if /etc/shadow is world readable, world writable, or world executable,
-    # or if /etc/passwd is world writable
     for my $file (@files) {
         my $mode = (stat($file))[2];
 
+        # Warn if /etc/shadow is world readable, world writable, or world executable,
+        # or if /etc/passwd is world writable
         if (($file eq '/etc/shadow' and $mode & 007) or ($file eq '/etc/passwd' and $mode & 002)) {
             $security_advisor_obj->add_advise(
                 {
