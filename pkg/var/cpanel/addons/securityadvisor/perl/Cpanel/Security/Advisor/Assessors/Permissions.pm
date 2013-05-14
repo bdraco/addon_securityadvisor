@@ -20,30 +20,37 @@ sub _check_for_unsafe_permissions {
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    # Warn if /etc/shadow is world readable, world writeable, or world executable
-    my $mode = (stat('/etc/shadow'))[2];
-    if ($mode & 007) {
-        $security_advisor_obj->add_advise(
-            {
-                'type' => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text' => ['/etc/shadow has unsafe permissions'],
-                'suggestion' => ['Reset the permissions on /etc/shadow']
-            }
-        );
-    }
 
-    # Warn if /etc/shadow has a user or group which is not root
-    my $uid = (stat('/etc/shadow'))[4];
-    my $gid = (stat('/etc/shadow'))[5];
-
-    if ($uid != 0 or $gid != 0) {
-        $security_advisor_obj->add_advise(
-            {
-                'type' => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text' => ['/etc/shadow is owned by a user and/or group which is not root'],
-                'suggestion' => ['Reset the ownership permissions on /etc/shadow']
-            }
+    my %test_files = (
+        '/etc/shadow' => { 'perms' => '0600', 'uid' => 0, 'gid' => 0 },
+        '/etc/passwd' => { 'perms' => '0644', 'uid' => 0, 'gid' => 0 }
         );
+
+    for my $file (keys %test_files) {
+        my $mode = (stat($file))[2] & 07777;
+        $mode = sprintf "%lo", $mode;
+        my ($uid,$gid) = (stat($file))[4,5];
+
+
+        if ($mode != $test_files{$file}->{'perms'} ) {
+            $security_advisor_obj->add_advise(
+                {
+                    'type' => $Cpanel::Security::Advisor::ADVISE_WARN,
+                    'text' => ["$file has non default permissions"],
+                    'suggestion' => ["Review the permissions on $file to ensure they are safe"]
+                }
+            );
+        }
+
+        if ($uid != $test_files{$uid} or $gid != $test_files{$gid}) {
+            $security_advisor_obj->add_advise(
+                {
+                    'type' => $Cpanel::Security::Advisor::ADVISE_WARN,
+                    'text' => ["$file has non root user and/or group"],
+                    'suggestion' => ["Review the ownership permissions on $file"]
+                }
+            );
+        }
     }
 }
 
