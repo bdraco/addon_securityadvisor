@@ -26,12 +26,12 @@ sub _is_frontpage_installed {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Frontpage is installed'],
                 'suggestion' => [
-                    '1. Rebuild EasyApache without Frontpage selected 2. Uninstall the Frontpage RPM (rpm -e frontpage)',
+                    'Rebuild using “[output,url,_1,EasyApache,_2,_3]” without Frontpage selected, then uninstall the Frontpage RPM (rpm -e frontpage)',
+                    '~token~/cgi/easyapache.pl?action=_pre_cpanel_sync_screen', 'target', '_blank',
                 ],
             }
         );
     }
-
 }
 
 1;
