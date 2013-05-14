@@ -20,4 +20,22 @@ sub new {
     return $self;
 }
 
+sub add_advise {
+    my ( $self, %opts ) = @_;
+
+    $self->{'security_advisor_obj'}->add_advise( {%opts} );
+}
+
+sub add_good_advise {
+    my ( $self, %opts ) = @_;
+
+    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD );
+}
+
+sub add_bad_advise {
+    my ( $self, %opts ) = @_;
+
+    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_BAD );
+}
+
 1;
