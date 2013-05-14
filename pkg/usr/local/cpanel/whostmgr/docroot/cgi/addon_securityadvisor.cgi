@@ -1,5 +1,6 @@
 #!/usr/local/cpanel/3rdparty/bin/perl
 #WHMADDON:addonupdates:Security Advisor Tool
+#ACLS:all
 # cpanel - whostmgr/docroot/cgi/addon_securityadvisor.cgi    Copyright(c) 2013 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
