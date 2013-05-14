@@ -14,17 +14,17 @@ sub generate_advise {
     $self->_is_frontpage_installed();
 }
 
-sub _is_frontpage_installed{
+sub _is_frontpage_installed {
 
-    my( $self ) = @_;
+    my ($self) = @_;
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    if ( -e '/usr/local/frontpage/version5.0/bin/owsadm.exe' ){
+    if ( -e '/usr/local/frontpage/version5.0/bin/owsadm.exe' ) {
         $security_advisor_obj->add_advise(
             {
-                'type' => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text' => ['Frontpage is installed'],
+                'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+                'text'       => ['Frontpage is installed'],
                 'suggestion' => [
                     '1. Rebuild EasyApache without Frontpage selected 2. Uninstall the Frontpage RPM (rpm -e frontpage)',
                 ],
