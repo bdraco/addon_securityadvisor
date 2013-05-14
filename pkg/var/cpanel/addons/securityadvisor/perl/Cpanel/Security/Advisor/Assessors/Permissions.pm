@@ -9,14 +9,14 @@ use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub generate_advise {
-    my ($self) = @_; 
+    my ($self) = @_;
     $self->_check_for_unsafe_permissions();
 }
 
 sub _check_for_unsafe_permissions {
     return if ($^O ne 'linux');
 
-    my ($self) = @_; 
+    my ($self) = @_;
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
@@ -34,23 +34,23 @@ sub _check_for_unsafe_permissions {
 
         if ($mode != $test_files{$file}->{'perms'} ) {
             $security_advisor_obj->add_advise(
-                {   
+                {
                     'type' => $Cpanel::Security::Advisor::ADVISE_WARN,
                     'text' => ["$file has non default permissions"],
                     'suggestion' => ["Review the permissions on $file to ensure they are safe"]
-                }   
-            );  
+                }
+            );
         }
 
         if ($uid != $test_files{$uid} or $gid != $test_files{$gid}) {
             $security_advisor_obj->add_advise(
-                {   
+                {
                     'type' => $Cpanel::Security::Advisor::ADVISE_WARN,
                     'text' => ["$file has non root user and/or group"],
                     'suggestion' => ["Review the ownership permissions on $file"]
-                }   
-            );  
-        }   
+                }
+            );
+        }
     }
 }
 
