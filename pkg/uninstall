@@ -30,6 +30,6 @@ use Cpanel::Version ();
 unlink("/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi");
 system "/bin/rm","-rf","--","/var/cpanel/addons/securityadvisor/";
 
-print "cPanel Security Advisor uninstalled into WHM.\n";
+print "cPanel Security Advisor uninstalled from WHM.\n";
 
 exit(0);
