@@ -41,9 +41,9 @@ sub _check_for_apache_chroot {
                 'text'       => ['Apache vhosts are not chroot()ed.'],
                 'suggestion' => [
                     'Enable “Jail Apache” in the “[output,url,_1,Tweak Settings,_4,_5]” area, and change users to jailshell in the “[output,url,_2,Manage Shell Access,_4,_5]” area.  Consider a more robust solution by using “[output,url,_3,CageFS on CloudLinux,_4,_5]”',
-                    $security_advisor_obj->security_token() . "/scripts2/tweaksettings?find=jailapache",
-                    $security_advisor_obj->security_token() . "/scripts2/manageshells",
-                    "http://cpanel.net/cpanel-whm/cloudlinux/",
+                    '../scripts2/tweaksettings?find=jailapache',
+                    '../scripts2/manageshells',
+                    'http://cpanel.net/cpanel-whm/cloudlinux/',
                     'target',
                     '_blank'
                 ],

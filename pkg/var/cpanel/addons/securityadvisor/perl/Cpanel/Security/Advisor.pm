@@ -64,16 +64,7 @@ sub add_advise {
     my ( $self, $advise ) = @_;
 
     my $function = ( split( m{::}, ( caller(1) )[3] ) )[-1];
-    my $token = $self->security_token();
-
-    if ( $advise->{suggestion} && ref $advise->{suggestion} eq 'ARRAY' ) {
-        $advise->{suggestion} = [ map { s/~token~/$token/ig; $_ } @{ $advise->{suggestion} } ];
-    }
     push @{ $self->{'advise'}->{ ( caller(1) )[0] }->{$function} }, $advise;
-}
-
-sub security_token {
-    return ( $ENV{'cp_security_token'} || '' );
 }
 
 1;

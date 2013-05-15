@@ -24,7 +24,7 @@ sub _check_for_ssh_settings {
             'text'       => ['SSH password authentication is enabled.'],
             'suggestion' => [
                 'Disable SSH password authentication in the “[output,url,_1,SSH Password Authorization Tweak,_2,_3]” area',
-                "~token~/scripts2/tweaksshauth",
+                '../scripts2/tweaksshauth',
                 'target',
                 '_blank'
             ],
@@ -42,7 +42,7 @@ sub _check_for_ssh_settings {
             'text'       => ['SSH direct root logins are permitted.'],
             'suggestion' => [
                 'Manually edit /etc/ssh/sshd_config and change PermitRootLogin to “no”, then restart SSH in the “[output,url,_1,Restart SSH,_2,_3]” area',
-                "~token~/scripts/ressshd",
+                '../scripts/ressshd',
                 'target',
                 '_blank'
             ],

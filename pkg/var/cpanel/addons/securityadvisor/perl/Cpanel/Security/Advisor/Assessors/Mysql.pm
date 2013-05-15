@@ -21,7 +21,7 @@ sub generate_advise {
             'text'       => ['Cannot connect to MySQL server.'],
             'suggestion' => [
                 'Enable MySQL database service',
-                "~token~/scripts/srvmng",
+                '../scripts/srvmng',
                 'target',
                 '_blank'
             ],
