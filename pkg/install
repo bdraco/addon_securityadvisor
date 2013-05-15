@@ -27,14 +27,14 @@
 
 use Cpanel::Version ();
 
-if ( $Cpanel::Version::MAJORVERSION < 11.37 ) {
+if ( $Cpanel::Version::MAJORVERSION < 11.34 ) {
     #
     #  Note: probably works fine on 11.34+ but untested
     #  and its going to advise you to enable security features
     #  that are not available on older versions.  We could 
     #  add versioning in the future
     #   
-    print "This addon requires 11.37 or later.\n";
+    print "This addon requires 11.34 or later.\n";
     exit(1);
 }
 
