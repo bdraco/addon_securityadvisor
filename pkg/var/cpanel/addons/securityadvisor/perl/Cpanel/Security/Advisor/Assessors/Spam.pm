@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::Spam;
 
-# Copyright (c) 2013, cPanel, Inc.                                                                                                                                                                      
+# Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -27,6 +27,7 @@ package Cpanel::Security::Advisor::Assessors::Spam;
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use strict;
+use Cpanel::Version ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub generate_advise {
@@ -102,7 +103,12 @@ sub _check_for_nobody_tracking {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Apache is not being queried to determine the actual sender when mail originates from the “nobody” psuedo-user.'],
                 'suggestion' => [
-                    'Enable “Query Apache server status to determine the sender of email sent from processes running as nobody” in the “[output,url,_1,Exim Configuration Manager,_2,_3]” area\'s “Basic Editor”',
+                    (
+                        $Cpanel::Version::MAJORVERSION > 11.35
+                        ? 'Enable “Query Apache server status to determine the sender of email sent from processes running as nobody” in the “[output,url,_1,Exim Configuration Manager,_2,_3]” area\'s “Basic Editor”'
+                        : 'Upgrade to cPanel 11.36 or later, then enable “Query Apache server status to determine the sender of email sent from processes running as nobody” in the “[output,url,_1,Exim Configuration Manager,_2,_3]” area\'s “Basic Editor”'
+
+                    ),
                     '../scripts2/displayeximconfforedit',
                     'target',
                     '_blank'

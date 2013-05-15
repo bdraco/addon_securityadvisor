@@ -28,6 +28,7 @@ package Cpanel::Security::Advisor::Assessors::Apache;
 
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
+use Cpanel::Version         ();
 use Cpanel::Config::Sources ();
 use Cpanel::HttpRequest     ();
 use Cpanel::SafeRun::Errors ();
