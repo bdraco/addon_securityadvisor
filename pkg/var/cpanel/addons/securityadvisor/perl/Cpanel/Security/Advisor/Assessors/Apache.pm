@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::Apache;
 
-# Copyright (c) 2013, cPanel, Inc.                                                                                                                                                                      
+# Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -28,10 +28,14 @@ package Cpanel::Security::Advisor::Assessors::Apache;
 
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
+use Cpanel::Config::Sources ();
+use Cpanel::HttpRequest     ();
+use Cpanel::SafeRun::Errors ();
 
 sub generate_advise {
     my ($self) = @_;
     $self->_check_for_apache_chroot();
+    $self->_check_for_easyapache_build();
 }
 
 sub _check_for_apache_chroot {
@@ -72,6 +76,35 @@ sub _check_for_apache_chroot {
         );
     }
 
+}
+
+sub _check_for_easyapache_build {
+    my $self                 = shift;
+    my $security_advisor_obj = $self->{'security_advisor_obj'};
+
+    my $cpsources          = Cpanel::Config::Sources::loadcpsources();
+    my $httprequest_obj    = Cpanel::HttpRequest->new( 'hideOutput' => 1 );
+    my $latest_ea3_version = '';
+    eval { $latest_ea3_version = $httprequest_obj->request( 'host' => $cpsources->{'HTTPUPDATE'}, 'url' => '/cpanelsync/easy/version_easy', 'protocol' => 0, ); };
+    chomp($latest_ea3_version);
+
+    my $installed_version = Cpanel::SafeRun::Errors::saferunallerrors( '/usr/local/apache/bin/httpd', '-v' );
+    $installed_version = $installed_version =~ /Cpanel::Easy::Apache v([\d.]+)/s ? $1 : '';
+
+    if ( $latest_ea3_version && $installed_version && $latest_ea3_version ne $installed_version ) {
+        $security_advisor_obj->add_advise(
+            {
+                'type'       => $Cpanel::Security::Advisor::ADVISE_WARN,
+                'text'       => ['EasyApache3 has updates available.'],
+                'suggestion' => [
+                    '[output,url,_1,EasyApache3,_2,_3] needs to be run periodically to update Apache, PHP and other public server functionality to the latest versions. Updates to EasyApache3 often fix security vulnernabilities in this software.',
+                    '../cgi/easyapache.pl?action=_pre_cpanel_sync_screen',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
 }
 
 1;
