@@ -25,7 +25,7 @@ sub _check_for_low_pwstrength {
                 'text'       => ['Trivially weak passwords are permitted.'],
                 'suggestion' => [
                     'Configure Password Strength requirements in the “[output,url,_1,Password Strength Configuration,_2,_3]” area',
-                    $security_advisor_obj->security_token() . "/scripts/minpwstrength",
+                    '../scripts/minpwstrength',
                     'target',
                     '_blank'
                 ],
@@ -40,7 +40,7 @@ sub _check_for_low_pwstrength {
                 'text'       => ['Password strength requirements are low.'],
                 'suggestion' => [
                     'Configure a Default Password Strength of at least 50 in the “[output,url,_1,Password Strength Configuration,_2,_3]” area',
-                    $security_advisor_obj->security_token() . "/scripts/minpwstrength",
+                    '../scripts/minpwstrength',
                     'target',
                     '_blank'
                 ],
@@ -55,7 +55,7 @@ sub _check_for_low_pwstrength {
                 'text'       => ['Password strength requirements are moderate.'],
                 'suggestion' => [
                     'Configure a Default Password Strength of at least 65 in the “[output,url,_1,Password Strength Configuration,_2,_3]” area',
-                    $security_advisor_obj->security_token() . "/scripts/minpwstrength",
+                    '../scripts/minpwstrength',
                     'target',
                     '_blank'
                 ],

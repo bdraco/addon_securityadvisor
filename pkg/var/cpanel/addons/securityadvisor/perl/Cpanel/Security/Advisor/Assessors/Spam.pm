@@ -33,7 +33,7 @@ sub _check_for_nobody_tracking {
                 'text'       => ['The psuedo-user “nobody” is permitted to send email.'],
                 'suggestion' => [
                     'Enable “Prevent "nobody" from sending mail” in the “[output,url,_1,Tweak Settings,_2,_3]” area',
-                    $security_advisor_obj->security_token() . "/scripts2/tweaksettings?find=nobodyspam",
+                    '../scripts2/tweaksettings?find=nobodyspam',
                     'target',
                     '_blank'
                 ],
@@ -57,7 +57,7 @@ sub _check_for_nobody_tracking {
                 'text'       => ['Outbound SMTP connections are unrestricted.'],
                 'suggestion' => [
                     'Enable SMTP Restrictions in the “[output,url,_1,SMTP Restrictions,_2,_3]” area',
-                    $security_advisor_obj->security_token() . "/scripts2/smtpmailgidonly",
+                    '../scripts2/smtpmailgidonly',
                     'target',
                     '_blank'
                 ],
@@ -82,7 +82,7 @@ sub _check_for_nobody_tracking {
                 'text'       => ['Apache is not being queried to determine the actual sender when mail originates from the “nobody” psuedo-user.'],
                 'suggestion' => [
                     'Enable “Query Apache server status to determine the sender of email sent from processes running as nobody” in the “[output,url,_1,Exim Configuration Manager,_2,_3]” area\'s “Basic Editor”',
-                    $security_advisor_obj->security_token() . "/scripts2/displayeximconfforedit",
+                    '../scripts2/displayeximconfforedit',
                     'target',
                     '_blank'
                 ],

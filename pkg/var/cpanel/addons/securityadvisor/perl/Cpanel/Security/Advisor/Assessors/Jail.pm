@@ -29,7 +29,7 @@ sub _check_for_unjailed_users {
                     'text'       => ['Jailshell is mounting /usr/bin suid, which allows escaping the jail via crontab.'],
                     'suggestion' => [
                         'Disable “Jailed /usr/bin mounted suid" in the “[output,url,_1,Tweak Settings,_2,_3]” area',
-                        $security_advisor_obj->security_token() . "/scripts2/tweaksettings?find=jailmountusrbinsuid",
+                        "../scripts2/tweaksettings?find=jailmountusrbinsuid",
                         'target',
                         '_blank'
                     ],
@@ -50,7 +50,7 @@ sub _check_for_unjailed_users {
                     'text'       => [ 'Users running outside of the jail: [list_and,_1].', \@users_without_jail ],
                     'suggestion' => [
                         'Change these users to jailshell in the “[output,url,_1,Manage Shell Access,_2,_3]” area.',
-                        $security_advisor_obj->security_token() . "/scripts2/manageshells",
+                        '../scripts2/manageshells',
                         'target',
                         '_blank'
 
