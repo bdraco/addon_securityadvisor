@@ -1,8 +1,12 @@
-#!/usr/local/cpanel/3rdparty/bin/perl
+#!/bin/sh
+eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'
+  if 0;
+
+#!/usr/bin/perl
 #WHMADDON:addonupdates:Security Advisor Tool
 #ACLS:all
 
-# Copyright (c) 2013, cPanel, Inc.                                                                                                                                                                      
+# Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -31,7 +35,7 @@
 package cgi::addon_securityadvisor;
 
 BEGIN {
-    unshift @INC, '/var/cpanel/addons/securityadvisor/perl';
+    unshift @INC, '/var/cpanel/addons/securityadvisor/perl', '/usr/local/cpanel';
 
     require Cpanel::Locale;
 
