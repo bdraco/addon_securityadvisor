@@ -90,9 +90,10 @@ sub _check_for_easyapache_build {
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
     my $cpsources          = Cpanel::Config::Sources::loadcpsources();
+    my $ea_update_server   = defined $cpsources->{'EASOURCES'} ? $cpsources->{'EASOURCES'} : $cpsources->{'HTTPUPDATE'};
     my $httprequest_obj    = Cpanel::HttpRequest->new( 'hideOutput' => 1 );
     my $latest_ea3_version = '';
-    eval { $latest_ea3_version = $httprequest_obj->request( 'host' => $cpsources->{'HTTPUPDATE'}, 'url' => '/cpanelsync/easy/version_easy', 'protocol' => 0, ); };
+    eval { $latest_ea3_version = $httprequest_obj->request( 'host' => $ea_update_server, 'url' => '/cpanelsync/easy/version_easy', 'protocol' => 0, ); };
     chomp($latest_ea3_version);
 
     my $installed_version = Cpanel::SafeRun::Errors::saferunallerrors( '/usr/local/apache/bin/httpd', '-v' );
