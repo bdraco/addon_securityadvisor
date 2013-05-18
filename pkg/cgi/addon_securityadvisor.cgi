@@ -1,5 +1,5 @@
 #!/bin/sh
-eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'
+eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'    # -*-mode:perl-*-
   if 0;
 
 #!/usr/bin/perl
@@ -36,19 +36,15 @@ package cgi::addon_securityadvisor;
 
 BEGIN {
     unshift @INC, '/var/cpanel/addons/securityadvisor/perl', '/usr/local/cpanel';
-
-    # can go away after rt 85588 is in place
-    require Cpanel::Locale;
-    no warnings 'once';
-    *Cpanel::Locale::makevar = sub {
-        return shift->maketext( ref $_[0] ? @{ $_[0] } : @_ );    ## no extract maketext
-    };
 }
 
 use Whostmgr::ACLS          ();
 use Whostmgr::HTMLInterface ();
 use Cpanel::Form            ();
 use Cpanel::Template        ();
+use Cpanel::Comet           ();
+use Cpanel::Encoder::URI    ();
+use POSIX                   ();
 
 # from /var/cpanel/addons/securityadvisor/perl
 use Cpanel::Security::Advisor ();
@@ -56,45 +52,83 @@ use Cpanel::Security::Advisor ();
 run(@ARGV) unless caller();
 
 sub run {
-    print _headers();
     _check_acls();
-
     my $form = Cpanel::Form::parseform();
+    if ( $form->{'start_scan'} ) {
+        _start_scan( $form->{'channel'} );
+        exit;
+    }
+    else {
+        _headers("text/html");
 
-    my $advisor = Cpanel::Security::Advisor->new();
-
-    my $advice = $advisor->generate_advice();
-
-    Cpanel::Template::process_template(
-        'whostmgr',
-        {
-            'template_file' => '/var/cpanel/addons/securityadvisor/templates/main.tmpl',
-            'data'          => {
-                'form'   => $form,
-                'advice' => $advice,
+        Cpanel::Template::process_template(
+            'whostmgr',
+            {
+                'template_file' => '/var/cpanel/addons/securityadvisor/templates/main.tmpl',
             },
-        },
-    );
+        );
+    }
 }
 
 sub _check_acls {
     Whostmgr::ACLS::init_acls();
 
     if ( !Whostmgr::ACLS::hasroot() ) {
+        _headers('text/html');
         Whostmgr::HTMLInterface::defheader( 'cPanel Security Advisor', '', '/cgi/addon_securityadvisor.cgi' );
         print <<'EOM';
-    
-    <br />
-    <br />
-    <div align="center"><h1>Permission denied</h1></div>
-    </body>
-    </html>
+<br />
+<br />
+<div align="center"><h1>Permission denied</h1></div>
+</body>
+</html>
 EOM
         exit;
     }
 }
 
 sub _headers {
-    return "Content-type: text/html\r\n\r\n";
+    my $content_type = shift;
+    print "Content-type: ${content_type}; charset=utf-8\r\n\r\n";
+}
+
+# Start a new scan writing to the comet channel specified
+sub _start_scan {
+    my $channel = shift;
+    _headers('text/json');
+
+    if ( !$channel ) {
+        print qq({"status":0,"message":"No scan channel was specified."}\n);
+        return;
+    }
+    if ( $channel !~ m{\A[/A-Za-z_0-9]+\z} ) {
+        print qq({"status":0,"message":"Invalid channel name."}\n);
+        return;
+    }
+
+    my $comet = Cpanel::Comet->new();
+    if ( !$comet->subscribe($channel) ) {
+        print qq({"status":0,"message":"Failed to subscribe to channel."}\n);
+        return;
+    }
+
+    my $pid = fork();
+    if ( !defined $pid ) {
+        print qq({"status":0,"message":"Failed to fork scanning subprocess."}\n);
+        return;
+    }
+    elsif ($pid) {
+        print qq({"status":1,"message":"Scan started."}\n);
+        return;
+    }
+    else {
+        POSIX::setsid();
+        open STDOUT, ">", "/dev/null";
+        open STDIN,  "<", "/dev/null";
+        my $advisor = Cpanel::Security::Advisor->new( 'comet' => $comet, 'channel' => $channel );
+
+        $advisor->generate_advice();
+        exit;
+    }
 }
 

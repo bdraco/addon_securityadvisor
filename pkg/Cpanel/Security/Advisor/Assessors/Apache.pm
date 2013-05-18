@@ -39,6 +39,12 @@ sub generate_advice {
     $self->_check_for_easyapache_build();
 }
 
+sub estimated_runtime {
+
+    # These checks have to connect out to the cpanel mirrors to verify the current version
+    return 5;
+}
+
 sub _check_for_apache_chroot {
     my ($self) = @_;
 
