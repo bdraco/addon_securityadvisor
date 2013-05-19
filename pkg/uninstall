@@ -28,7 +28,14 @@
 use Cpanel::Version ();
 
 unlink("/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi");
-system "/bin/rm","-rf","--","/var/cpanel/addons/securityadvisor/";
+unlink("/var/cpanel/apps/securityadvisor.conf");
+
+system "/bin/rm", "-rf", "--", "/var/cpanel/addons/securityadvisor/";
+system "/bin/rm", "-rf", "--", "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor";
+
+if ( -x '/usr/local/cpanel/bin/unregister_appconfig' ) {
+    system '/usr/local/cpanel/bin/unregister_appconfig', 'securityadvisor';
+}
 
 print "cPanel Security Advisor uninstalled from WHM.\n";
 
