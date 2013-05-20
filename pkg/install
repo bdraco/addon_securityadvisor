@@ -51,7 +51,7 @@ system '/usr/bin/rsync', '-a', 'Cpanel',    '/var/cpanel/addons/securityadvisor/
 
 if ( -x '/usr/local/cpanel/bin/register_appconfig' ) {
     install( "-o", "root", "-g", "wheel", "-m" . "0700", "cgi/addon_securityadvisor.cgi", "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor/index.cgi" );
-    system '/usr/local/cpanel/bin/register_appconfig', 'securityadvisor', "appconfig/securityadvisor.conf";
+    system '/usr/local/cpanel/bin/register_appconfig', "appconfig/securityadvisor.conf";
 }
 else {
     install( "-o", "root", "-g", "wheel", "-m" . "0700", "cgi/addon_securityadvisor.cgi", "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi" );

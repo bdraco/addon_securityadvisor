@@ -34,7 +34,7 @@ system "/bin/rm", "-rf", "--", "/var/cpanel/addons/securityadvisor/";
 system "/bin/rm", "-rf", "--", "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor";
 
 if ( -x '/usr/local/cpanel/bin/unregister_appconfig' ) {
-    system '/usr/local/cpanel/bin/unregister_appconfig', 'securityadvisor';
+    system '/usr/local/cpanel/bin/unregister_appconfig', "appconfig/securityadvisor.conf";
 }
 
 print "cPanel Security Advisor uninstalled from WHM.\n";
