@@ -37,16 +37,18 @@ package cgi::addon_securityadvisor;
 BEGIN {
     unshift @INC, '/var/cpanel/addons/securityadvisor/perl', '/usr/local/cpanel';
 
+    # can go away after rt 85588 is in place
     require Cpanel::Locale;
-
-    *Cpanel::Locale::maketext_ref = sub {
-        return shift->maketext( ref $_[0] ? @{ $_[0] } : @_ );
+    no warnings 'once';
+    *Cpanel::Locale::makevar = sub {
+        return shift->maketext( ref $_[0] ? @{ $_[0] } : @_ );    ## no extract maketext
     };
 }
 
 use Whostmgr::ACLS          ();
 use Whostmgr::HTMLInterface ();
 use Cpanel::Form            ();
+use Cpanel::Template        ();
 
 # from /var/cpanel/addons/securityadvisor/perl
 use Cpanel::Security::Advisor ();

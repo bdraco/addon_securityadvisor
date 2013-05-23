@@ -32,7 +32,7 @@ var notices = [];
                         level:  [% item.type %] == 8 ? "error" : [% item.type %] == 4 ? "warn" : [% item.type %] == 2 ? "info" : "success",
                         type:  [% item.type %],
                         container: DOM.get('securityadvise'),
-                        content: [% locale.maketext_ref(item.text).json %] + "<blockquote>" + [% locale.maketext_ref(item.suggestion).json %] + "</blockquote>"
+                        content: [% locale.makevar(item.text).json %] + "<blockquote>" + [% locale.makevar(item.suggestion).json %] + "</blockquote>"
                 } );
           </script>
       [% END %]
