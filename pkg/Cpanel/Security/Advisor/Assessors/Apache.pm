@@ -33,7 +33,7 @@ use Cpanel::Config::Sources ();
 use Cpanel::HttpRequest     ();
 use Cpanel::SafeRun::Errors ();
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_apache_chroot();
     $self->_check_for_easyapache_build();
@@ -45,7 +45,7 @@ sub _check_for_apache_chroot {
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
     if ( $security_advisor_obj->{'cpconf'}->{'jailapache'} ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['Jailed Apache is enabled'],
@@ -53,7 +53,7 @@ sub _check_for_apache_chroot {
         );
     }
     elsif ( -x '/usr/bin/cagefsctl' ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['CageFS is enabled'],
@@ -62,7 +62,7 @@ sub _check_for_apache_chroot {
     }
     else {
 
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Apache vhosts are not chroot()ed.'],
@@ -100,7 +100,7 @@ sub _check_for_easyapache_build {
     $installed_version = $installed_version =~ /Cpanel::Easy::Apache v([\d.]+)/s ? $1 : '';
 
     if ( $latest_ea3_version && $installed_version && $latest_ea3_version ne $installed_version ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_WARN,
                 'text'       => ['EasyApache3 has updates available.'],

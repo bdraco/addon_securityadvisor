@@ -30,7 +30,7 @@ use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 use Cpanel::SafeRun::Simple;
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_is_frontpage_installed();
 }
@@ -42,7 +42,7 @@ sub _is_frontpage_installed {
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
     if ( -e '/usr/local/frontpage/version5.0/bin/owsadm.exe' ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Frontpage is installed'],

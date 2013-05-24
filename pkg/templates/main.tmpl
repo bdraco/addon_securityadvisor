@@ -20,18 +20,18 @@ var Page_Notice = CPANEL.widgets.Page_Notice;
 var notices = [];
 </script>
 
-<div id="securityadvise"></div>
+<div id="securityadvice"></div>
 
 
-[% IF data.advise %]
-  [% FOR module IN data.advise.values %]
+[% IF data.advice %]
+  [% FOR module IN data.advice.values %]
     [% FOR func IN module.values %]
         [% FOR item IN func %]
           <script>
               notices.push( {
                         level:  [% item.type %] == 8 ? "error" : [% item.type %] == 4 ? "warn" : [% item.type %] == 2 ? "info" : "success",
                         type:  [% item.type %],
-                        container: DOM.get('securityadvise'),
+                        container: DOM.get('securityadvice'),
                         content: [% locale.makevar(item.text).json %] + "<blockquote>" + [% locale.makevar(item.suggestion).json %] + "</blockquote>"
                 } );
           </script>
@@ -39,7 +39,7 @@ var notices = [];
     [% END %]
   [% END %]
 [% ELSE %]
-  No advise
+  No advicce
 [% END %]
 
 </div>

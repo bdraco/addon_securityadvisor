@@ -31,14 +31,14 @@ use Cpanel::Mysql    ();
 use Cpanel::Hostname ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
 
     $self->{msq} = Cpanel::Mysql->new();
 
     # check if we can connect to dbh
     if ( !$self->_check_for_mysql_connection ) {
-        $self->add_bad_advise(
+        $self->add_bad_advice(
             'text'       => ['Cannot connect to MySQL server.'],
             'suggestion' => [
                 'Enable MySQL database service',
@@ -77,10 +77,10 @@ sub _check_for_db_test {
     my ($exists) = $self->dbh->selectrow_array(qq{show databases like 'test'});
 
     if ( !$exists ) {
-        $self->add_good_advise( text => "MySQL test database doesn't exist." );
+        $self->add_good_advice( text => "MySQL test database doesn't exist." );
     }
     else {
-        $self->add_bad_advise(
+        $self->add_bad_advice(
             text       => "MySQL test database exists.",
             suggestion => q{MySQL test database is used by numerous attacks and should be removed.
 				> mysql -e 'drop database test'
@@ -108,10 +108,10 @@ sub _check_for_anonymous_users {
     }
 
     if ($ok) {
-        $self->add_good_advise( text => "MySQL check for anonymous users" );
+        $self->add_good_advice( text => "MySQL check for anonymous users" );
     }
     else {
-        $self->add_bad_advise(
+        $self->add_bad_advice(
             text       => "You have some anonymous mysql users",
             suggestion => q{Remove mysql anonymous mysql users: > mysql -e 'drop user ""'}
         );

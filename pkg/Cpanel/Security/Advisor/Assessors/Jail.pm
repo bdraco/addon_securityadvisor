@@ -32,7 +32,7 @@ use Cpanel::PwCache            ();
 use Cpanel::Config::Users      ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_unjailed_users();
 }
@@ -44,7 +44,7 @@ sub _check_for_unjailed_users {
 
     if ( !-x '/usr/bin/cagefsctl' ) {
         if ( -e '/var/cpanel/conf/jail/flags/mount_usr_bin_suid' ) {
-            $security_advisor_obj->add_advise(
+            $security_advisor_obj->add_advice(
                 {
                     'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                     'text'       => ['Jailshell is mounting /usr/bin suid, which allows escaping the jail via crontab.'],
@@ -65,7 +65,7 @@ sub _check_for_unjailed_users {
         my @users_without_jail = map { $_->[0] } grep { exists $cpusers{ $_->[0] } && $_->[8] && $_->[8] !~ m{(?:no|jail)shell} } @$pwcache_ref;    #aka users without jail or noshell
 
         if (@users_without_jail) {
-            $security_advisor_obj->add_advise(
+            $security_advisor_obj->add_advice(
                 {
                     'type'       => $Cpanel::Security::Advisor::ADVISE_WARN,
                     'text'       => [ 'Users running outside of the jail: [list_and,_1].', \@users_without_jail ],
