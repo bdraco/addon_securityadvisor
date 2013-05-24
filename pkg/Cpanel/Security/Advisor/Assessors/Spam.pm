@@ -27,7 +27,8 @@ package Cpanel::Security::Advisor::Assessors::Spam;
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use strict;
-use Cpanel::Version ();
+use Cpanel::Version  ();
+use Cpanel::LoadFile ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub generate_advise {
@@ -72,6 +73,15 @@ sub _check_for_nobody_tracking {
         );
 
     }
+    elsif ( _csf_has_option( 'SMTP_BLOCK', '1' ) ) {
+        $security_advisor_obj->add_advise(
+            {
+                'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
+                'text' => ['CSF has SMTP_BLOCK enabled.'],
+            }
+        );
+
+    }
     else {
         $security_advisor_obj->add_advise(
             {
@@ -86,7 +96,6 @@ sub _check_for_nobody_tracking {
 
             }
         );
-
     }
 
     if ( -e '/var/cpanel/config/email/query_apache_for_nobody_senders' ) {
@@ -118,6 +127,15 @@ sub _check_for_nobody_tracking {
 
     }
 
+}
+
+sub _csf_has_option {
+    my ( $option, $value ) = @_;
+    if ( -e '/etc/csf/csf.conf' ) {
+        my $csf_conf = Cpanel::LoadFile::loadfile('/etc/csf/csf.conf');
+        return 1 if $csf_conf =~ m/\n[ \t]*\Q$option\E[ \t]*=[ \t]*['"]\Q$value\E/s;
+    }
+    return 0;
 }
 
 1;
