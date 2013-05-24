@@ -30,7 +30,7 @@ use strict;
 use Cpanel::Config::Hulk ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_brute_force_protection();
 }
@@ -43,7 +43,7 @@ sub _check_for_brute_force_protection {
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
     if ($cphulk_enabled) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['cPHulk Brute Force Protection is enabled.'],
@@ -52,7 +52,7 @@ sub _check_for_brute_force_protection {
 
     }
     elsif ( -e "/etc/csf" ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['CSF is installed'],
@@ -61,7 +61,7 @@ sub _check_for_brute_force_protection {
 
     }
     else {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['No brute force protection detected'],

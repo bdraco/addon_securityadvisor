@@ -69,23 +69,23 @@ sub new {
     return $self;
 }
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
 
-    $self->{'advise'} = {};
+    $self->{'advice'} = {};
 
     foreach my $mod ( @{ $self->{'assessors'} } ) {
-        $mod->generate_advise();
+        $mod->generate_advice();
     }
 
-    return $self->{'advise'};
+    return $self->{'advice'};
 }
 
-sub add_advise {
-    my ( $self, $advise ) = @_;
+sub add_advice {
+    my ( $self, $advice ) = @_;
 
     my $function = ( split( m{::}, ( caller(1) )[3] ) )[-1];
-    push @{ $self->{'advise'}->{ ( caller(1) )[0] }->{$function} }, $advise;
+    push @{ $self->{'advice'}->{ ( caller(1) )[0] }->{$function} }, $advice;
 }
 
 1;

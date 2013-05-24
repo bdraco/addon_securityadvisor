@@ -31,7 +31,7 @@ use Cpanel::Version  ();
 use Cpanel::LoadFile ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_nobody_tracking();
 }
@@ -42,7 +42,7 @@ sub _check_for_nobody_tracking {
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
     if ( $security_advisor_obj->{'cpconf'}->{'nobodyspam'} ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['The psuedo-user “nobody” is not permitted to send email.'],
@@ -50,7 +50,7 @@ sub _check_for_nobody_tracking {
         );
     }
     else {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['The psuedo-user “nobody” is permitted to send email.'],
@@ -65,7 +65,7 @@ sub _check_for_nobody_tracking {
     }
 
     if ( -e '/var/cpanel/smtpgidonlytweak' ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['Outbound SMTP connections are restricted.'],
@@ -74,7 +74,7 @@ sub _check_for_nobody_tracking {
 
     }
     elsif ( _csf_has_option( 'SMTP_BLOCK', '1' ) ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['CSF has SMTP_BLOCK enabled.'],
@@ -83,7 +83,7 @@ sub _check_for_nobody_tracking {
 
     }
     else {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Outbound SMTP connections are unrestricted.'],
@@ -99,7 +99,7 @@ sub _check_for_nobody_tracking {
     }
 
     if ( -e '/var/cpanel/config/email/query_apache_for_nobody_senders' ) {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
                 'text' => ['Apache is being queried to determine the actual sender when mail originates from the “nobody” pseudo-user.'],
@@ -107,7 +107,7 @@ sub _check_for_nobody_tracking {
         );
     }
     else {
-        $security_advisor_obj->add_advise(
+        $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                 'text'       => ['Apache is not being queried to determine the actual sender when mail originates from the “nobody” psuedo-user.'],

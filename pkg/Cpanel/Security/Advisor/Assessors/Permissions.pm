@@ -29,7 +29,7 @@ package Cpanel::Security::Advisor::Assessors::Permissions;
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_unsafe_permissions();
 }
@@ -50,14 +50,14 @@ sub _check_for_unsafe_permissions {
         if ( ( $expected_attributes->{'perms'} & 07777 ) != ( $current_mode & 07777 ) ) {
             my $expected_mode = sprintf( "%04o", $expected_attributes->{'perms'} );
             my $actual_mode   = sprintf( "%04o", $current_mode & 07777 );
-            $self->add_warn_advise(
+            $self->add_warn_advice(
                 'text'       => ["$file has non default permissions.  Expected: $expected_mode, Actual: $actual_mode."],
                 'suggestion' => ["Review the permissions on $file to ensure they are safe"]
             );
         }
 
         if ( $uid != $expected_attributes->{'uid'} or $gid != $expected_attributes->{'gid'} ) {
-            $self->add_warn_advise(
+            $self->add_warn_advice(
                 'text'       => ["$file has non root user and/or group"],
                 'suggestion' => ["Review the ownership permissions on $file"]
             );

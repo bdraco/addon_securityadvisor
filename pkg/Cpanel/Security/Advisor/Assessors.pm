@@ -41,34 +41,34 @@ sub new {
     return $self;
 }
 
-sub add_advise {
+sub add_advice {
     my ( $self, %opts ) = @_;
 
-    $self->{'security_advisor_obj'}->add_advise( {%opts} );
+    $self->{'security_advisor_obj'}->add_advice( {%opts} );
 }
 
-sub add_good_advise {
+sub add_good_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD );
+    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD );
 }
 
-sub add_info_advise {
+sub add_info_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_INFO );
+    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_INFO );
 }
 
-sub add_warn_advise {
+sub add_warn_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_WARN );
+    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_WARN );
 }
 
-sub add_bad_advise {
+sub add_bad_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advise( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_BAD );
+    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_BAD );
 }
 
 1;

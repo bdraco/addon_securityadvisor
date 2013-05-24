@@ -63,7 +63,7 @@ sub run {
 
     my $advisor = Cpanel::Security::Advisor->new();
 
-    my $advise = $advisor->generate_advise();
+    my $advice = $advisor->generate_advice();
 
     Cpanel::Template::process_template(
         'whostmgr',
@@ -71,7 +71,7 @@ sub run {
             'template_file' => '/var/cpanel/addons/securityadvisor/templates/main.tmpl',
             'data'          => {
                 'form'   => $form,
-                'advise' => $advise,
+                'advice' => $advice,
             },
         },
     );

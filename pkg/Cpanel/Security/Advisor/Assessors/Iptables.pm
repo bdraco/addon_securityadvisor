@@ -30,7 +30,7 @@ use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 use Cpanel::SafeRun::Simple;
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_is_iptables_active();
 }
@@ -46,7 +46,7 @@ sub _is_iptables_active {
 
         # need a better way to check this
         if ( $status_check =~ m/not running/i ) {
-            $security_advisor_obj->add_advise(
+            $security_advisor_obj->add_advice(
                 {
                     'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
                     'text'       => ['Firewall is not running'],
