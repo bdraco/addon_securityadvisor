@@ -33,6 +33,7 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advise {
     my ($self) = @_;
     $self->_check_for_ssh_settings;
+	$self->_check_for_ssh_version;
 }
 
 sub _check_for_ssh_settings {
@@ -76,5 +77,100 @@ sub _check_for_ssh_settings {
 
     }
 }
+
+sub _check_for_ssh_version {
+	my ($self) = @_;
+	my ($latest_sshversion, $current_sshversion);
+
+	open(my $debug, ">", "/root/debug.txt");
+
+	my $output = Cpanel::SafeRun::Full::run(
+					'program' 	=> Cpanel::FindBin::findbin('yum'),
+					'args'		=> [
+						'list',
+						'openssh',
+					],
+					'timeout'	=> 30,
+				);
+	if ($output->{'status'}) {
+		if ($output->{'stderr'}) {
+			$Cpanel::CPERROR{'yum'} = "Yum has failed: $output->{'stderr'}";
+		}
+		elsif ($output->{'timeout'}) {
+			$Cpanel::CPERROR{'yum'} = "Timeout while querying yum.";
+		}
+		else {
+			my @output = split(/\n/, $output->{'stdout'});
+			$latest_sshversion = $& if ($output[-1] =~ m/[a-z0-9.-]{14}/);
+		}
+	}
+	else {
+		$Cpanel::CPERROR{'yum'} = $output->{'stderr'};
+	}
+
+	print $debug "Full status of command is: $output->{'status'}\nSTDOUT is: $output->{'stdout'}\nSTDERR is: $output->{'stderr'}\nMessage is: $output->{'message'}\n";
+
+	$output = Cpanel::SafeRun::Full::run(
+					'program' 	=> Cpanel::FindBin::findbin('rpm'),
+					'args'		=> [
+						'-qa',
+					],
+					'timeout'	=> 30,
+				);
+
+	if ($output->{'status'}) {
+		if ($output->{'stderr'}) {
+			$Cpanel::CPERROR{'rpm'} = "RPM command failed: $output->{'stderr'}";
+		}
+		elsif ($output->{'timeout'}) {
+			$Cpanel::CPERROR{'rpm'} = "Timeout while running rpm.";
+		}
+		else {
+			$current_sshversion = $& if ($output->{'stdout'} =~ m/openssh.[a-z0-9.-]{14}\.[a-z][0-9_]+/);
+		}
+	}
+	else {
+		$Cpanel::CPERROR{'rpm'} = $output->{'stderr'};
+	}
+
+	#$current_sshversion = "5.3p1-84.1.el5";
+
+	print $debug "Latest version is: $latest_sshversion\nCurrent version is: $current_sshversion\n";
+
+	$current_sshversion =~ s/openssh-//;
+	print $debug "Current SSH version is now: $current_sshversion\n";
+	$current_sshversion =~ s/\.[a-z][0-9_]+//;
+
+	print $debug "Stripped current ssh version is: $current_sshversion\n";
+
+	if (length $current_sshversion && length $latest_sshversion) {
+		if ($current_sshversion lt $latest_sshversion) {
+			print $debug "Current version is less than latest version\n";
+			$self->add_bad_advise(
+				'text'			=> ['Current SSH version is out of date.'],
+				'suggestion'	=> [
+					'Update current system software in the "[output,url,_1,Update System Software,_2,_3]" area',
+					'../scripts/dialog?dialog=updatesyssoftware',
+					'target',
+					'_blank'
+				],
+			);
+		}
+		else {
+			print $debug "Current version is == or > latest version\n";
+			$self->add_good_advise(
+				'text'			=> ['Current SSH version is up to date.']
+			);
+		}
+	}
+
+	print $debug "Print a test message to ensure function is being called\n\n";
+	$self->add_good_advise(
+		'text' => ['This is a test of a good message']
+	);
+
+	close $debug;
+}
+
 
 1;
