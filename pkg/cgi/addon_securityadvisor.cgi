@@ -75,7 +75,7 @@ sub _check_acls {
 
     if ( !Whostmgr::ACLS::hasroot() ) {
         _headers('text/html');
-        Whostmgr::HTMLInterface::defheader( 'cPanel Security Advisor', '', '/cgi/addon_securityadvisor.cgi' );
+        Whostmgr::HTMLInterface::defheader( 'cPanel Security Advisor' );
         print <<'EOM';
 <br />
 <br />

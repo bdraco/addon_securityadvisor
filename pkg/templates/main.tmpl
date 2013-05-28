@@ -67,7 +67,7 @@ Scanner.prototype.start_comet_scanner = function(channel) {
             }
         };
 
-        YAHOO.util.Connect.asyncRequest('POST', "addon_securityadvisor.cgi", start_scan_callback, "start_scan=1&channel=" + encodeURIComponent(channel) );
+        YAHOO.util.Connect.asyncRequest('POST', "", start_scan_callback, "start_scan=1&channel=" + encodeURIComponent(channel) );
     });
 
     cometd.handshake();
