@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::SSH;
 
-# Copyright (c) 2013, cPanel, Inc.                                                                                                                                                                      
+# Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -32,7 +32,7 @@ use Cpanel::FindBin;
 use Cpanel::SafeRun::Full;
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_ssh_settings;
 	$self->_check_for_ssh_version;
@@ -44,7 +44,7 @@ sub _check_for_ssh_settings {
     my $sshd_config = Whostmgr::Services::SSH::Config::get_config();
 
     if ( $sshd_config->{'PasswordAuthentication'} =~ m/yes/i || $sshd_config->{'ChallengeResponseAuthentication'} =~ m/yes/i ) {
-        $self->add_bad_advise(
+        $self->add_bad_advice(
             'text'       => ['SSH password authentication is enabled.'],
             'suggestion' => [
                 'Disable SSH password authentication in the “[output,url,_1,SSH Password Authorization Tweak,_2,_3]” area',
@@ -55,14 +55,14 @@ sub _check_for_ssh_settings {
         );
     }
     else {
-        $self->add_good_advise(
+        $self->add_good_advice(
             'text' => ['SSH password authentication is disabled.'],
         );
 
     }
 
     if ( $sshd_config->{'PermitRootLogin'} =~ m/yes/i || !$sshd_config->{'PermitRootLogin'} ) {
-        $self->add_bad_advise(
+        $self->add_bad_advice(
             'text'       => ['SSH direct root logins are permitted.'],
             'suggestion' => [
                 'Manually edit /etc/ssh/sshd_config and change PermitRootLogin to “no”, then restart SSH in the “[output,url,_1,Restart SSH,_2,_3]” area',
@@ -73,7 +73,7 @@ sub _check_for_ssh_settings {
         );
     }
     else {
-        $self->add_good_advise(
+        $self->add_good_advice(
             'text' => ['SSH direct root logins are disabled.'],
         );
 

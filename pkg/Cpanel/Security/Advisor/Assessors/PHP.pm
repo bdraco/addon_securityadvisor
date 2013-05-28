@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::PHP;
 
-# Copyright (c) 2013, cPanel, Inc.                                                                                                                                                                      
+# Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -29,7 +29,7 @@ package Cpanel::Security::Advisor::Assessors::PHP;
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub generate_advise {
+sub generate_advice {
     my ($self) = @_;
     $self->_check_for_php_running_as_nobody();
 }

@@ -1,59 +1,149 @@
+[% USE Whostmgr -%]
 [% WRAPPER '_defwrapper.tmpl'
   header = 'cPanel Security Advisor'
- -%]
+scripts = [
+Whostmgr.find_file_url('sharedjs/cometd_optimized.js')
+Whostmgr.find_file_url('sharedjs/yui/yui.cometd_optimized.js')
+]
+;
+-%]
 [% PROCESS '_ajaxapp_styles.tmpl' -%]
-[% PROCESS '_ajaxapp_header.tmpl' -%] 
+[% PROCESS '_ajaxapp_header.tmpl' -%]
 [% USE Whostmgr -%]
 [% USE JSON %]
 [% USE Dumper %]
 
-<div>
+<div><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button></div>
+<div style="overflow:hidden">
+<div style="float:left">Scan started: <span id="start_time">---</span></div>
+<div style="float:right">Scan finished: <span id="end_time">---</span></div>
+</div>
+
+<div id="securityadvice"></div>
 
 <script>
-// Imports
+function Scanner() {
+    this.scan_running = false;
+    this.estimated_runtimes = {};
+};
+
+Scanner.prototype.run_scan = function() {
+    if ( !this.scan_running) {
+        document.getElementById('scan_button').disabled = true;
+        document.getElementById('securityadvice').innerHTML = "";
+        document.getElementById('start_time').innerHTML = "---";
+        document.getElementById('end_time').innerHTML = "---";
+        var current_time = new Date;
+        var scan_channel = "/addon_securityadvisor/" + current_time.getTime();
+        this.scan_running = true;
+        this.estimated_runtimes = {};
+        this.estimated_runtimes['total'] = 0;
+        this.start_comet_scanner(scan_channel);
+    }
+};
+Scanner.prototype.start_comet_scanner = function(channel) {
+    var cometd = new YAHOO.util.Cometd;
+    cometd.configure('[% cp_security_token %]/cometd');
+
+    // This listener waits until the subscription actually goes through
+    // before sending the request to start the scan
+    var subscription_listener = cometd.addListener('/meta/subscribe', function(message) {
+        cometd.removeListener(subscription_listener);
+        var start_scan_callback = {
+            success:function(o) {
+                var data = YAHOO.lang.JSON.parse(o.responseText);
+                if (data.status != 1) {
+                    this.scan_running = false;
+                    cometd.disconnect();
+                    document.getElementById('scan_button').disabled = false;
+                    alert("Failed to start scan: " + data.message);
+                }
+            },
+            failure:function(o) {
+                this.scan_running = false;
+                cometd.disconnect();
+                document.getElementById('scan_button').disabled = false;
+                alert("Failed to start scan: " + o.statusText);
+            }
+        };
+
+        YAHOO.util.Connect.asyncRequest('POST', "", start_scan_callback, "start_scan=1&channel=" + encodeURIComponent(channel) );
+    });
+
+    cometd.handshake();
+    var lastmsgid;
+    var subscription = cometd.subscribe(channel, this, function(o) {
+        //var msgsEl = document.getElementById('msgs');
+        //msgsEl.innerHTML += this.parse_comet_message(o.data);
+        this.parse_comet_message(o.data);
+
+        if (o.data.type === "scan_run" && o.data.state == 1) {
+            this.scan_running = false;
+            document.getElementById('scan_button').disabled = false;
+            cometd.unsubscribe(subscrption);
+            cometd.disconnect();
+        }
+
+    });
+};
+Scanner.prototype.parse_comet_message = function(data) {
+    var message = "";
+    if (data.type == "mod_load") {
+        if (data.state == 1 ) {
+            this.estimated_runtimes[data.module] = data.runtime;
+            this.estimated_runtimes['total'] += data.runtime;
+        //    message = "<p>Loaded " + data.module + " with an estimated runtime of " + data.runtime + " (total " + this.estimated_runtimes['total'] + ")</p>";
+        }
+        else {
+        //    message = "<p>Failed to load " + data.module + ": " + data.message + "<p>";
+        }
+    }
+    else if (data.type == "scan_run") {
+        var current_time = new Date;
+        if (data.state == 0) {
+            this.estimated_runtimes['remaining'] = this.estimated_runtimes['total'];
+            document.getElementById('start_time').innerHTML = current_time;
+        }
+        else {
+            document.getElementById('end_time').innerHTML = current_time;
+        }
+    }
+    else if (data.type == "mod_run") {
+        var current_time = new Date;
+        if (data.state == 0) {
+        //    message = "<p>Starting checks for " + data.module + "</p>";
+        }
+        else if (data.state == 1) {
+            this.estimated_runtimes['remaining'] -= this.estimated_runtimes[data.module];
+        //    message = "<p>Finished checks for " + data.module + " successfully at " + current_time + " (remaining " + this.estimated_runtimes['remaining'] + ")</p>";
+        }
+        else if (data.state == -1) {
+            this.estimated_runtimes['remaining'] -= this.estimated_runtimes[data.module];
+        //    message = "<p>Finished checks for " + data.module + " unsuccessfully at " + current_time + " (remaining " + this.estimated_runtimes['remaining'] + ")</p>";
+        }
+    }
+    else if (data.type == "mod_advice") {
+        new Page_Notice({
+                        level: data.advice.type == 8 ? "error" : data.advice.type == 4 ? "warn" : data.advice.type == 2 ? "info" : "success",
+                        type: data.advice.type,
+                        container: DOM.get('securityadvice'),
+                        content: data.advice.text + (data.advice.suggestion ? ("<blockquote>" + data.advice.suggestion + "</blockquote>") : ""),
+                }).show();
+    }
+    else {
+        //message = "<p>Unknown data received: " + YAHOO.lang.escapeHTML(YAHOO.lang.JSON.stringify(data)) + "</p>";
+    }
+    return message;
+};
+
 var YAHOO = window.YAHOO;
 var CPANEL = window.CPANEL;
 var DOM = YAHOO.util.Dom;
 var EVENT = YAHOO.util.Event;
 var Page_Notice = CPANEL.widgets.Page_Notice;
 
-var notices = [];
-</script>
-
-<div id="securityadvise"></div>
-
-
-[% IF data.advise %]
-  [% FOR module IN data.advise.values %]
-    [% FOR func IN module.values %]
-        [% FOR item IN func %]
-          <script>
-              notices.push( {
-                        level:  [% item.type %] == 8 ? "error" : [% item.type %] == 4 ? "warn" : [% item.type %] == 2 ? "info" : "success",
-                        type:  [% item.type %],
-                        container: DOM.get('securityadvise'),
-                        content: [% locale.makevar(item.text).json %] + "<blockquote>" + [% locale.makevar(item.suggestion).json %] + "</blockquote>"
-                } );
-          </script>
-      [% END %]
-    [% END %]
-  [% END %]
-[% ELSE %]
-  No advise
-[% END %]
-
-</div>
-
-<script>
-
-var sorted_notices = notices.sort( function(a,b) {
-        return parseInt(b.type) - parseInt(a.type);
-  });
-
-for(var i=0;i<=sorted_notices.length;i++) {
-  new Page_Notice(sorted_notices[i]).show();  
-}
-
+var scanner = new Scanner();
+YAHOO.util.Event.onDOMReady( function() { scanner.run_scan();} );
 </script>
 
 [% PROCESS '_ajaxapp_footer.tmpl' -%]
