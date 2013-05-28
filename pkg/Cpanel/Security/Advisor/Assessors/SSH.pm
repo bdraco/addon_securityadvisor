@@ -84,10 +84,6 @@ sub _check_for_ssh_version {
 	my ($self) = @_;
 	my ($latest_sshversion, $current_sshversion);
 
-	open(my $debug, ">", "/root/debug.txt");
-
-	print $debug "Path to yum is: " . Cpanel::FindBin::findbin('yum') . "\n";
-
 	my $output = Cpanel::SafeRun::Full::run(
 					'program' 	=> Cpanel::FindBin::findbin('yum'),
 					'args'		=> [
@@ -112,8 +108,6 @@ sub _check_for_ssh_version {
 		$Cpanel::CPERROR{'yum'} = $output->{'stderr'};
 	}
 
-	print $debug "Full status of command is: $output->{'status'}\nSTDOUT is: $output->{'stdout'}\nSTDERR is: $output->{'stderr'}\nMessage is: $output->{'message'}\n";
-
 	$output = Cpanel::SafeRun::Full::run(
 					'program' 	=> Cpanel::FindBin::findbin('rpm'),
 					'args'		=> [
@@ -137,20 +131,12 @@ sub _check_for_ssh_version {
 		$Cpanel::CPERROR{'rpm'} = $output->{'stderr'};
 	}
 
-	$current_sshversion = "5.3p1-84.1.el5";
-
-	print $debug "Latest version is: $latest_sshversion\nCurrent version is: $current_sshversion\n";
-
 	$current_sshversion =~ s/openssh-//;
-	print $debug "Current SSH version is now: $current_sshversion\n";
 	$current_sshversion =~ s/\.[a-z][0-9_]+//;
-
-	print $debug "Stripped current ssh version is: $current_sshversion\n";
 
 	if (length $current_sshversion && length $latest_sshversion) {
 		if ($current_sshversion lt $latest_sshversion) {
-			print $debug "Current version is less than latest version\n";
-			$self->add_bad_advise(
+			$self->add_bad_advice(
 				'text'			=> ['Current SSH version is out of date.'],
 				'suggestion'	=> [
 					'Update current system software in the "[output,url,_1,Update System Software,_2,_3]" area',
@@ -161,23 +147,11 @@ sub _check_for_ssh_version {
 			);
 		}
 		else {
-			print $debug "Current version is == or > latest version\n";
-			$self->add_good_advise(
+			$self->add_good_advice(
 				'text'			=> ['Current SSH version is up to date.']
 			);
 		}
 	}
-
-	print $debug "Print a test message to ensure function is being called\n\n";
-	$self->add_good_advise(
-		'text' => ['This is a test of a good message']
-	);
-
-	close $debug;
-
 }
-
-_check_for_ssh_version;
-
 
 1;
