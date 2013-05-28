@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::PHP;
 
-# Copyright (c) 2013, cPanel, Inc.                                                                                                                                                                      
+# Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #

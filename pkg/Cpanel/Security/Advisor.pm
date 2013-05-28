@@ -32,6 +32,8 @@ our $VERISON = 1.0;
 
 use Cpanel::Config::LoadCpConf ();
 use Cpanel::Logger             ();
+use Cpanel::JSON               ();
+use Cpanel::Locale             ();
 
 our $ADVISE_GOOD = 1;
 our $ADVISE_INFO = 2;
@@ -39,7 +41,10 @@ our $ADVISE_WARN = 4;
 our $ADVISE_BAD  = 8;
 
 sub new {
-    my ($class) = @_;
+    my ( $class, %options ) = @_;
+
+    die "No comet object provided"  unless ( $options{'comet'} );
+    die "No comet channel provided" unless ( $options{'channel'} );
 
     opendir( my $advisor_module_dir, "/var/cpanel/addons/securityadvisor/perl/Cpanel/Security/Advisor/Assessors" );
     my @modules = sort grep { m/\.pm$/ } readdir($advisor_module_dir);
@@ -52,17 +57,23 @@ sub new {
         'logger'    => Cpanel::Logger->new(),
         'cpconf'    => scalar Cpanel::Config::LoadCpConf::loadcpconf(),
         '_version'  => $VERISON,
+        'comet'     => $options{'comet'},
+        'channel'   => $options{'channel'},
+        'locale'    => Cpanel::Locale->get_handle(),
     }, $class;
 
     foreach my $module (@modules) {
         my $module_name = $module;
-        $module_name =~ s/\.pm$//g;
-        eval "require Cpanel::Security::Advisor::Assessors::$module_name;";
+        $module_name =~ s/(.*)\.pm$/Cpanel::Security::Advisor::Assessors::$1/g;
+        my $object;
+        eval "require $module_name; \$object = $module_name->new(\$self);";
         if ( !$@ ) {
-            push @assessors, "Cpanel::Security::Advisor::Assessors::$module_name"->new($self);
+            push @assessors, { name => $module_name, object => $object };
+            my $runtime = ( $object->can('estimated_runtime') ? $object->estimated_runtime() : 1 );
+            $self->_internal_message( { type => 'mod_load', state => 1, module => $module_name, runtime => $runtime } );
         }
         else {
-            $self->{'logger'}->warn("Failed to load Cpanel::Security::Advisor::Assessors::$module_name: $@");
+            $self->_internal_message( { type => 'mod_load', state => 0, module => $module_name, message => "$@" } );
         }
     }
 
@@ -72,20 +83,60 @@ sub new {
 sub generate_advice {
     my ($self) = @_;
 
-    $self->{'advice'} = {};
-
+    $self->_internal_message( { type => 'scan_run', state => 0 } );
     foreach my $mod ( @{ $self->{'assessors'} } ) {
-        $mod->generate_advice();
+        $self->_internal_message( { type => 'mod_run', state => 0, module => $mod->{name} } );
+        eval { $mod->{object}->generate_advice(); };
+        $self->_internal_message( { type => 'mod_run', state => ( $@ ? -1 : 1 ), module => $mod->{name}, message => "$@" } );
     }
+    $self->_internal_message( { type => 'scan_run', state => 1 } );
+    $self->{'comet'}->purgeclient();
+}
 
-    return $self->{'advice'};
+sub _internal_message {
+    my ( $self, $data ) = @_;
+    $self->{'comet'}->add_message(
+        $self->{'channel'},
+        Cpanel::JSON::Dump(
+            {
+                channel => $self->{'channel'},
+                data    => $data
+            }
+        ),
+    );
 }
 
 sub add_advice {
     my ( $self, $advice ) = @_;
 
-    my $function = ( split( m{::}, ( caller(1) )[3] ) )[-1];
-    push @{ $self->{'advice'}->{ ( caller(1) )[0] }->{$function} }, $advice;
+    my $caller = ( caller(1) )[3];
+    $caller =~ /(.+)::([^:]+)$/;
+
+    my $module   = $1;
+    my $function = $2;
+    $self->expand_advice_maketext($advice);
+    $self->{'comet'}->add_message(
+        $self->{'channel'},
+        Cpanel::JSON::Dump(
+            {
+                channel => $self->{'channel'},
+                data    => {
+                    type     => 'mod_advice',
+                    module   => $module,
+                    function => $function,
+                    advice   => $advice,
+                }
+            }
+        ),
+    );
+}
+
+sub expand_advice_maketext {
+    my ( $self, $advice ) = @_;
+    foreach my $param (qw(text suggestion)) {
+        next unless defined $advice->{$param};
+        $advice->{$param} = $self->{'locale'}->maketext( ref $advice->{$param} eq 'ARRAY' ? @{ $advice->{$param} } : $advice->{$param} );
+    }
 }
 
 1;
