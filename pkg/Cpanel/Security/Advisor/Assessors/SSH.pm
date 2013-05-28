@@ -28,8 +28,6 @@ package Cpanel::Security::Advisor::Assessors::SSH;
 
 use strict;
 use Whostmgr::Services::SSH::Config ();
-use Cpanel::FindBin;
-use Cpanel::SafeRun::Full;
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub generate_advice {
