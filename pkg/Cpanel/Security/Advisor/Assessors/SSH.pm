@@ -152,6 +152,12 @@ sub _check_for_ssh_version {
 			);
 		}
 	}
+	else {
+		$self->add_warn_advice(
+			'text'			=> ['Unable to determine SSH version'],
+			'suggestion'	=> ['Ensure that yum and rpm are working on your system.']
+		);
+	}
 }
 
 1;
