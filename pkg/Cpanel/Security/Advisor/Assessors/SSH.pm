@@ -28,6 +28,8 @@ package Cpanel::Security::Advisor::Assessors::SSH;
 
 use strict;
 use Whostmgr::Services::SSH::Config ();
+use Cpanel::FindBin;
+use Cpanel::SafeRun::Full;
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub generate_advise {
@@ -84,6 +86,8 @@ sub _check_for_ssh_version {
 
 	open(my $debug, ">", "/root/debug.txt");
 
+	print $debug "Path to yum is: " . Cpanel::FindBin::findbin('yum') . "\n";
+
 	my $output = Cpanel::SafeRun::Full::run(
 					'program' 	=> Cpanel::FindBin::findbin('yum'),
 					'args'		=> [
@@ -133,7 +137,7 @@ sub _check_for_ssh_version {
 		$Cpanel::CPERROR{'rpm'} = $output->{'stderr'};
 	}
 
-	#$current_sshversion = "5.3p1-84.1.el5";
+	$current_sshversion = "5.3p1-84.1.el5";
 
 	print $debug "Latest version is: $latest_sshversion\nCurrent version is: $current_sshversion\n";
 
@@ -170,7 +174,10 @@ sub _check_for_ssh_version {
 	);
 
 	close $debug;
+
 }
+
+_check_for_ssh_version;
 
 
 1;
