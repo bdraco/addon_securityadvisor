@@ -80,7 +80,7 @@ Scanner.prototype.start_comet_scanner = function(channel) {
         if (o.data.type === "scan_run" && o.data.state == 1) {
             this.scan_running = false;
             document.getElementById('scan_button').disabled = false;
-            cometd.unsubscribe(subscrption);
+            cometd.unsubscribe(subscription);
             cometd.disconnect();
         }
 
