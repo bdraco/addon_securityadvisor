@@ -30,7 +30,8 @@ use strict;
 
 our $VERISON = 1.1;
 
-use Cpanel::SafeRun::Full ();
+use Cpanel::SafeRun::Full    ();
+use Cpanel::Version::Compare ();
 
 sub new {
     my ( $class, $security_advisor_obj ) = @_;
@@ -87,7 +88,7 @@ sub get_available_rpms {
     );
 
     if ( $output->{'status'} ) {
-        $self->{'available_rpms'} ||= {
+        $self->{'available_rpms'} = {
             map { m{\A(\S+)\.[^.\s]+\s+(\S+)} ? ( $1 => $2 ) : () }
               split( m/\n/, $output->{'stdout'} )
         };
@@ -114,6 +115,19 @@ sub get_installed_rpms {
         for my $line ( split( "\n", $output->{'stdout'} ) ) {
             chomp $line;
             my ( $rpm, $version ) = split( qr/\s+/, $line, 2 );
+            if ( $installed{$rpm} ) {
+                my ( $this_version,      $this_release )      = split( m/-/, $version,         2 );
+                my ( $installed_version, $installed_release ) = split( m/-/, $installed{$rpm}, 2 );
+
+                if (
+                    Cpanel::Version::Compare::compare( $installed_version, '>', $this_version )
+                    ||
+
+                    ( $this_version eq $installed_version && Cpanel::Version::Compare::compare( $installed_release, '>', $this_release ) )
+                  ) {
+                    next;
+                }
+            }
             $installed{$rpm} = $version;
         }
         $self->{'installed_rpms'} = \%installed;
