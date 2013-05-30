@@ -13,13 +13,23 @@ Whostmgr.find_file_url('sharedjs/yui/yui.cometd_optimized.js')
 [% USE JSON %]
 [% USE Dumper %]
 
-<div><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button></div>
-<div style="overflow:hidden">
-<div style="float:left">Scan started: <span id="start_time">---</span></div>
-<div style="float:right">Scan finished: <span id="end_time">---</span></div>
-</div>
+<table style="width: 0 auto;" width="100%"> 
+  <tbody>
+    <tr>
+      <td align="left" width="33%">Start Time: <span id="start_time">---</span></td>
+      <td align="center" width="33%"><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button><img id="spinner" style="display:none; margin-bottom: 3px; margin-right: 4px;" align="absmiddle" src="../images/report-spinner.gif" /><span id="current_item">---</span></td>
+      <td align="right" width="33%">Finish Time: <span id="end_time">---</span></td>
+    </tr>
+  </tbody>
+</table> 
 
-<div id="securityadvice"></div>
+
+<div id="securityadvice">
+  <div id="securityadvice_error"></div>
+  <div id="securityadvice_warn"></div>
+  <div id="securityadvice_info"></div>
+  <div id="securityadvice_success"></div>
+</div>
 
 <script>
 function Scanner() {
@@ -29,8 +39,11 @@ function Scanner() {
 
 Scanner.prototype.run_scan = function() {
     if ( !this.scan_running) {
-        document.getElementById('scan_button').disabled = true;
-        document.getElementById('securityadvice').innerHTML = "";
+        document.getElementById('scan_button').style.display='';
+        document.getElementById('securityadvice_error').innerHTML = "";
+        document.getElementById('securityadvice_warn').innerHTML = "";
+        document.getElementById('securityadvice_info').innerHTML = "";
+        document.getElementById('securityadvice_success').innerHTML = "";
         document.getElementById('start_time').innerHTML = "---";
         document.getElementById('end_time').innerHTML = "---";
         var current_time = new Date;
@@ -55,14 +68,14 @@ Scanner.prototype.start_comet_scanner = function(channel) {
                 if (data.status != 1) {
                     this.scan_running = false;
                     cometd.disconnect();
-                    document.getElementById('scan_button').disabled = false;
+                    document.getElementById('scan_button').style.display='';
                     alert("Failed to start scan: " + data.message);
                 }
             },
             failure:function(o) {
                 this.scan_running = false;
                 cometd.disconnect();
-                document.getElementById('scan_button').disabled = false;
+                document.getElementById('scan_button').style.display='';
                 alert("Failed to start scan: " + o.statusText);
             }
         };
@@ -71,6 +84,7 @@ Scanner.prototype.start_comet_scanner = function(channel) {
     });
 
     cometd.handshake();
+
     var lastmsgid;
     var subscription = cometd.subscribe(channel, this, function(o) {
         //var msgsEl = document.getElementById('msgs');
@@ -79,7 +93,7 @@ Scanner.prototype.start_comet_scanner = function(channel) {
 
         if (o.data.type === "scan_run" && o.data.state == 1) {
             this.scan_running = false;
-            document.getElementById('scan_button').disabled = false;
+            document.getElementById('scan_button').style.display='';
             cometd.unsubscribe(subscription);
             cometd.disconnect();
         }
@@ -101,14 +115,19 @@ Scanner.prototype.parse_comet_message = function(data) {
     else if (data.type == "scan_run") {
         var current_time = new Date;
         if (data.state == 0) {
+            document.getElementById('scan_button').style.display='none';
             this.estimated_runtimes['remaining'] = this.estimated_runtimes['total'];
             document.getElementById('start_time').innerHTML = current_time;
+            document.getElementById('spinner').style.display='';
         }
         else {
             document.getElementById('end_time').innerHTML = current_time;
+            document.getElementById('current_item').innerHTML = '';
+            document.getElementById('spinner').style.display='none';
         }
     }
     else if (data.type == "mod_run") {
+        document.getElementById('current_item').innerHTML = data.module;
         var current_time = new Date;
         if (data.state == 0) {
         //    message = "<p>Starting checks for " + data.module + "</p>";
@@ -123,10 +142,12 @@ Scanner.prototype.parse_comet_message = function(data) {
         }
     }
     else if (data.type == "mod_advice") {
+        var advise_notice_type = data.advice.type == 8 ? "error" : data.advice.type == 4 ? "warn" : data.advice.type == 2 ? "info" : "success";
+
         new Page_Notice({
-                        level: data.advice.type == 8 ? "error" : data.advice.type == 4 ? "warn" : data.advice.type == 2 ? "info" : "success",
+                        level: advise_notice_type,
                         type: data.advice.type,
-                        container: DOM.get('securityadvice'),
+                        container: DOM.get('securityadvice_' + advise_notice_type),
                         content: data.advice.text + (data.advice.suggestion ? ("<blockquote>" + data.advice.suggestion + "</blockquote>") : ""),
                 }).show();
     }
