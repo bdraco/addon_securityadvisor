@@ -82,55 +82,11 @@ sub _check_for_ssh_version {
     my ($self) = @_;
     my ( $latest_sshversion, $current_sshversion );
 
-    my $output = Cpanel::SafeRun::Full::run(
-        'program' => Cpanel::FindBin::findbin('yum'),
-        'args'    => [
-            'list',
-            'openssh',
-        ],
-        'timeout' => 30,
-    );
-    if ( $output->{'status'} ) {
-        if ( $output->{'stderr'} ) {
-            $Cpanel::CPERROR{'yum'} = "Yum has failed: $output->{'stderr'}";
-        }
-        elsif ( $output->{'timeout'} ) {
-            $Cpanel::CPERROR{'yum'} = "Timeout while querying yum.";
-        }
-        else {
-            my @output = split( /\n/, $output->{'stdout'} );
-            $latest_sshversion = $& if ( $output[-1] =~ m/[a-z0-9.-]{14}/ );
-        }
-    }
-    else {
-        $Cpanel::CPERROR{'yum'} = $output->{'stderr'};
-    }
+    my $installed_rpms = $self->get_installed_rpms();
+    my $available_rpms = $self->get_available_rpms();
 
-    $output = Cpanel::SafeRun::Full::run(
-        'program' => Cpanel::FindBin::findbin('rpm'),
-        'args'    => [
-            '-qa',
-        ],
-        'timeout' => 30,
-    );
-
-    if ( $output->{'status'} ) {
-        if ( $output->{'stderr'} ) {
-            $Cpanel::CPERROR{'rpm'} = "RPM command failed: $output->{'stderr'}";
-        }
-        elsif ( $output->{'timeout'} ) {
-            $Cpanel::CPERROR{'rpm'} = "Timeout while running rpm.";
-        }
-        else {
-            $current_sshversion = $& if ( $output->{'stdout'} =~ m/openssh.[a-z0-9.-]{14}\.[a-z][0-9_]+/ );
-        }
-    }
-    else {
-        $Cpanel::CPERROR{'rpm'} = $output->{'stderr'};
-    }
-
-    $current_sshversion =~ s/openssh-//;
-    $current_sshversion =~ s/\.[a-z][0-9_]+//;
+    my $current_sshversion = $installed_rpms->{'openssh-server'};
+    my $latest_sshversion  = $available_rpms->{'openssh-server'};
 
     if ( length $current_sshversion && length $latest_sshversion ) {
         if ( $current_sshversion lt $latest_sshversion ) {
@@ -145,7 +101,7 @@ sub _check_for_ssh_version {
             );
         }
         else {
-            $self->add_good_advice( 'text' => ['Current SSH version is up to date.'] );
+            $self->add_good_advice( 'text' => [ 'Current SSH version is up to date: ' . $current_sshversion ] );
         }
     }
     else {
@@ -154,6 +110,7 @@ sub _check_for_ssh_version {
             'suggestion' => ['Ensure that yum and rpm are working on your system.']
         );
     }
+
 }
 
 1;

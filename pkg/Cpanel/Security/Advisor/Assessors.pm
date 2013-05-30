@@ -28,7 +28,9 @@ package Cpanel::Security::Advisor::Assessors;
 
 use strict;
 
-our $VERISON = 1.0;
+our $VERISON = 1.1;
+
+use Cpanel::SafeRun::Full ();
 
 sub new {
     my ( $class, $security_advisor_obj ) = @_;
@@ -69,6 +71,51 @@ sub add_bad_advice {
     my ( $self, %opts ) = @_;
 
     $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_BAD );
+}
+
+sub get_available_rpms {
+    my ($self) = @_;
+
+    my $output = Cpanel::SafeRun::Full::run(
+        'program' => Cpanel::FindBin::findbin('yum'),
+        'args'    => [
+            '-d', '0', 'list', 'all',
+        ],
+        'timeout' => 90,
+    );
+
+    if ( $output->{'status'} ) {
+        $self->{'available_rpms'} ||= {
+            map { m{\A(\S+)\.[^.\s]+\s+(\S+)} ? ( $1 => $2 ) : () }
+              split( m/\n/, $output->{'stdout'} )
+        };
+    }
+
+    return $self->{'available_rpms'};
+}
+
+sub get_installed_rpms {
+    my ($self) = @_;
+
+    my $output = Cpanel::SafeRun::Full::run(
+        'program' => Cpanel::FindBin::findbin('rpm'),
+        'args'    => [
+            '-qa', '--queryformat', '%{NAME} %{VERSION}-%{RELEASE}\n'
+        ],
+        'timeout' => 30,
+    );
+
+    if ( $output->{'status'} ) {
+        my %installed;
+        for my $line ( split( "\n", $output->{'stdout'} ) ) {
+            chomp $line;
+            my ( $rpm, $version ) = split( qr/\s+/, $line, 2 );
+            $installed{$rpm} = $version;
+        }
+        $self->{'installed_rpms'} = \%installed;
+    }
+
+    return $self->{'installed_rpms'};
 }
 
 1;
