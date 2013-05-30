@@ -42,15 +42,15 @@ sub _check_for_kernel_version {
     my $installed_rpms = $self->get_installed_rpms();
     my $available_rpms = $self->get_available_rpms();
 
-	my $running_kernelversion = ( Cpanel::OSSys::uname() )[2];
-	$running_kernelversion =~ s/\.[a-z][0-9_]+//;
+    my $running_kernelversion = ( Cpanel::OSSys::uname() )[2];
+    $running_kernelversion =~ s/\.[a-z][0-9_]+//;
     my $running_kernelversion_without_release = ( split( m/-/, $running_kernelversion ) )[0];
 
     my $current_kernelversion = $installed_rpms->{'kernel'};
 
     my $latest_kernelversion = $available_rpms->{'kernel'};
     my $latest_kernelversion_without_release = ( split( m/-/, $latest_kernelversion ) )[0];
-	
+
     if ( length $current_kernelversion && length $latest_kernelversion ) {
         if ( $running_kernelversion_without_release ne $latest_kernelversion_without_release ) {
             $self->add_info_advice( 'text' => [ 'Custom kernel version cannot be checked to see if it is up to date: ' . $running_kernelversion ] );
