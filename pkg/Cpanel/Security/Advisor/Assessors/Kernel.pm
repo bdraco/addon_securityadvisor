@@ -70,7 +70,7 @@ sub _check_for_kernel_version {
         }
         elsif ( $running_kernelversion ne $latest_kernelversion ) {
             $self->add_bad_advice(
-                'text'       => ["A newer kernel is installed, however the system has not been rebooted. running: $current_kernelversion, installed: $current_kernelversion"],
+                'text'       => ["A newer kernel is installed, however the system has not been rebooted. running: $running_kernelversion, installed: $current_kernelversion"],
                 'suggestion' => [
                     'Reboot the system in the "[output,url,_1,Graceful Server Reboot,_2,_3]" area.',
                     '../scripts/dialog?dialog=reboot',
