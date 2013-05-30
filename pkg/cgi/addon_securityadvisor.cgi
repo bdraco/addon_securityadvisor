@@ -43,6 +43,7 @@ use Whostmgr::HTMLInterface ();
 use Cpanel::Form            ();
 use Cpanel::Template        ();
 use Cpanel::Comet           ();
+use Cpanel::Rlimit          ();
 use Cpanel::Encoder::URI    ();
 use POSIX                   ();
 
@@ -75,7 +76,7 @@ sub _check_acls {
 
     if ( !Whostmgr::ACLS::hasroot() ) {
         _headers('text/html');
-        Whostmgr::HTMLInterface::defheader( 'cPanel Security Advisor' );
+        Whostmgr::HTMLInterface::defheader('cPanel Security Advisor');
         print <<'EOM';
 <br />
 <br />
@@ -94,6 +95,8 @@ sub _headers {
 
 # Start a new scan writing to the comet channel specified
 sub _start_scan {
+    Cpanel::Rlimit::set_rlimit_to_infinity();    # we need to run yum :)
+
     my $channel = shift;
     _headers('text/json');
 
