@@ -33,6 +33,7 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_ssh_settings;
+    $self->_check_for_ssh_version;
 }
 
 sub _check_for_ssh_settings {
@@ -74,6 +75,84 @@ sub _check_for_ssh_settings {
             'text' => ['SSH direct root logins are disabled.'],
         );
 
+    }
+}
+
+sub _check_for_ssh_version {
+    my ($self) = @_;
+    my ( $latest_sshversion, $current_sshversion );
+
+    my $output = Cpanel::SafeRun::Full::run(
+        'program' => Cpanel::FindBin::findbin('yum'),
+        'args'    => [
+            'list',
+            'openssh',
+        ],
+        'timeout' => 30,
+    );
+    if ( $output->{'status'} ) {
+        if ( $output->{'stderr'} ) {
+            $Cpanel::CPERROR{'yum'} = "Yum has failed: $output->{'stderr'}";
+        }
+        elsif ( $output->{'timeout'} ) {
+            $Cpanel::CPERROR{'yum'} = "Timeout while querying yum.";
+        }
+        else {
+            my @output = split( /\n/, $output->{'stdout'} );
+            $latest_sshversion = $& if ( $output[-1] =~ m/[a-z0-9.-]{14}/ );
+        }
+    }
+    else {
+        $Cpanel::CPERROR{'yum'} = $output->{'stderr'};
+    }
+
+    $output = Cpanel::SafeRun::Full::run(
+        'program' => Cpanel::FindBin::findbin('rpm'),
+        'args'    => [
+            '-qa',
+        ],
+        'timeout' => 30,
+    );
+
+    if ( $output->{'status'} ) {
+        if ( $output->{'stderr'} ) {
+            $Cpanel::CPERROR{'rpm'} = "RPM command failed: $output->{'stderr'}";
+        }
+        elsif ( $output->{'timeout'} ) {
+            $Cpanel::CPERROR{'rpm'} = "Timeout while running rpm.";
+        }
+        else {
+            $current_sshversion = $& if ( $output->{'stdout'} =~ m/openssh.[a-z0-9.-]{14}\.[a-z][0-9_]+/ );
+        }
+    }
+    else {
+        $Cpanel::CPERROR{'rpm'} = $output->{'stderr'};
+    }
+
+    $current_sshversion =~ s/openssh-//;
+    $current_sshversion =~ s/\.[a-z][0-9_]+//;
+
+    if ( length $current_sshversion && length $latest_sshversion ) {
+        if ( $current_sshversion lt $latest_sshversion ) {
+            $self->add_bad_advice(
+                'text'       => ['Current SSH version is out of date.'],
+                'suggestion' => [
+                    'Update current system software in the "[output,url,_1,Update System Software,_2,_3]" area',
+                    '../scripts/dialog?dialog=updatesyssoftware',
+                    'target',
+                    '_blank'
+                ],
+            );
+        }
+        else {
+            $self->add_good_advice( 'text' => ['Current SSH version is up to date.'] );
+        }
+    }
+    else {
+        $self->add_warn_advice(
+            'text'       => ['Unable to determine SSH version'],
+            'suggestion' => ['Ensure that yum and rpm are working on your system.']
+        );
     }
 }
 
