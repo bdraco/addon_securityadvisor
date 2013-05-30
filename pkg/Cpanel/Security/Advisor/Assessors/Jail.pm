@@ -64,13 +64,18 @@ sub _check_for_unjailed_users {
         my $pwcache_ref = Cpanel::PwCache::fetch_pwcache();
         my @users_without_jail = map { $_->[0] } grep { exists $cpusers{ $_->[0] } && $_->[8] && $_->[8] !~ m{(?:no|jail)shell} } @$pwcache_ref;    #aka users without jail or noshell
 
+        if ( scalar @users_without_jail > 100 ) {
+            splice( @users_without_jail, 100 );
+            push @users_without_jail, '..truncated..';
+        }
+
         if (@users_without_jail) {
             $security_advisor_obj->add_advice(
                 {
                     'type'       => $Cpanel::Security::Advisor::ADVISE_WARN,
                     'text'       => [ 'Users running outside of the jail: [list_and,_1].', \@users_without_jail ],
                     'suggestion' => [
-                        'Change these users to jailshell in the “[output,url,_1,Manage Shell Access,_2,_3]” area.',
+                        'Change these users to jailshell or noshell in the “[output,url,_1,Manage Shell Access,_2,_3]” area.',
                         '../scripts2/manageshells',
                         'target',
                         '_blank'
