@@ -43,12 +43,15 @@ sub _check_for_kernel_version {
     my $available_rpms = $self->get_available_rpms();
 
     my $running_kernelversion = ( Cpanel::OSSys::uname() )[2];
+    $running_kernelversion =~ s/(?:x86_64|i.86)$//;    #strip arch
     my $running_kernelversion_without_release = ( split( m/-/, $running_kernelversion ) )[0];
 
     my $current_kernelversion = $installed_rpms->{'kernel'};
+    $current_kernelversion =~ s/(?:x86_64|i.86)$//;    #strip arch
 
     my $latest_kernelversion = $available_rpms->{'kernel'};
     my $latest_kernelversion_without_release = ( split( m/-/, $latest_kernelversion ) )[0];
+    $latest_kernelversion =~ s/(?:x86_64|i.86)$//;     #strip arch
 
     if ( length $current_kernelversion && length $latest_kernelversion ) {
         if ( $running_kernelversion_without_release ne $latest_kernelversion_without_release ) {
