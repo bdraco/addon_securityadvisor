@@ -77,7 +77,9 @@ sub add_bad_advice {
 sub get_available_rpms {
     my ($self) = @_;
 
-    return $self->{'available_rpms'} if $self->{'available_rpms'};
+    my $cache = $self->{'security_advisor_obj'}->{'_cache'};
+
+    return $cache->{'available_rpms'} if $cache->{'available_rpms'};
 
     my $output = Cpanel::SafeRun::Full::run(
         'program' => Cpanel::FindBin::findbin('yum'),
@@ -88,19 +90,21 @@ sub get_available_rpms {
     );
 
     if ( $output->{'status'} ) {
-        $self->{'available_rpms'} = {
+        $cache->{'available_rpms'} = {
             map { m{\A(\S+)\.[^.\s]+\s+(\S+)} ? ( $1 => $2 ) : () }
               split( m/\n/, $output->{'stdout'} )
         };
     }
 
-    return $self->{'available_rpms'};
+    return $cache->{'available_rpms'};
 }
 
 sub get_installed_rpms {
     my ($self) = @_;
 
-    return $self->{'installed_rpms'} if $self->{'installed_rpms'};
+    my $cache = $self->{'security_advisor_obj'}->{'_cache'};
+
+    return $cache->{'installed_rpms'} if $cache->{'installed_rpms'};
 
     my $output = Cpanel::SafeRun::Full::run(
         'program' => Cpanel::FindBin::findbin('rpm'),
@@ -130,10 +134,10 @@ sub get_installed_rpms {
             }
             $installed{$rpm} = $version;
         }
-        $self->{'installed_rpms'} = \%installed;
+        $cache->{'installed_rpms'} = \%installed;
     }
 
-    return $self->{'installed_rpms'};
+    return $cache->{'installed_rpms'};
 }
 
 1;

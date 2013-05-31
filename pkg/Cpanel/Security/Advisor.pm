@@ -57,6 +57,7 @@ sub new {
         'logger'    => Cpanel::Logger->new(),
         'cpconf'    => scalar Cpanel::Config::LoadCpConf::loadcpconf(),
         '_version'  => $VERISON,
+        '_cache'     => {},
         'comet'     => $options{'comet'},
         'channel'   => $options{'channel'},
         'locale'    => Cpanel::Locale->get_handle(),
