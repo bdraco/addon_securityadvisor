@@ -47,6 +47,7 @@ mkdir( "/var/cpanel/addons/securityadvisor",      0700 );
 mkdir( '/var/cpanel/addons/securityadvisor/perl', 0700 );
 
 system '/usr/bin/rsync', '-rlptD', 'templates', '/var/cpanel/addons/securityadvisor/';
+system '/usr/bin/rsync', '-rlptD', 'bin',       '/var/cpanel/addons/securityadvisor/';
 system '/usr/bin/rsync', '-rlptD', 'Cpanel',    '/var/cpanel/addons/securityadvisor/perl/';
 
 if ( -x '/usr/local/cpanel/bin/register_appconfig' ) {
@@ -54,7 +55,8 @@ if ( -x '/usr/local/cpanel/bin/register_appconfig' ) {
     system '/usr/local/cpanel/bin/register_appconfig', "appconfig/securityadvisor.conf";
 }
 else {
-    install( "-o", "root", "-g", "wheel", "-m" . "0700", "cgi/addon_securityadvisor.cgi", "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi" );
+    install( "-o", "root", "-g", "wheel", "-m" . "0700", "cgi/addon_securityadvisor.cgi",  "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi" );
+    install( "-o", "root", "-g", "wheel", "-m" . "0600", "appconfig/securityadvisor.conf", "/var/cpanel/apps/securityadvisor.conf" );
 }
 
 print "cPanel Security Advisor installed into WHM.\n";
