@@ -39,7 +39,10 @@ sub run {
 
         if ( !-e "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor/index.cgi" && -e "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi" ) {
             mkdir( "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor", 0700 );
-            rename( "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor/index.cgi", "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi" );
+            rename(
+                "/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi",
+                "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor/index.cgi"
+            );
         }
     }
 
