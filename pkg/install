@@ -46,8 +46,8 @@ mkdir( "/var/cpanel/addons",                      0755 );
 mkdir( "/var/cpanel/addons/securityadvisor",      0700 );
 mkdir( '/var/cpanel/addons/securityadvisor/perl', 0700 );
 
-system '/usr/bin/rsync', '-a', 'templates', '/var/cpanel/addons/securityadvisor/';
-system '/usr/bin/rsync', '-a', 'Cpanel',    '/var/cpanel/addons/securityadvisor/perl/';
+system '/usr/bin/rsync', '-rlptD', 'templates', '/var/cpanel/addons/securityadvisor/';
+system '/usr/bin/rsync', '-rlptD', 'Cpanel',    '/var/cpanel/addons/securityadvisor/perl/';
 
 if ( -x '/usr/local/cpanel/bin/register_appconfig' ) {
     install( "-o", "root", "-g", "wheel", "-m" . "0700", "cgi/addon_securityadvisor.cgi", "/usr/local/cpanel/whostmgr/docroot/cgi/addons/securityadvisor/index.cgi" );
