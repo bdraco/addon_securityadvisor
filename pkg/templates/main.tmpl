@@ -1,6 +1,7 @@
 [% USE Whostmgr -%]
 [% WRAPPER '_defwrapper.tmpl'
   header = 'cPanel Security Advisor'
+  icon = '/addon_plugins/ico-security-advisor.png'
 scripts = [
 Whostmgr.find_file_url('sharedjs/cometd_optimized.js')
 Whostmgr.find_file_url('sharedjs/yui/yui.cometd_optimized.js')
@@ -17,7 +18,7 @@ Whostmgr.find_file_url('sharedjs/yui/yui.cometd_optimized.js')
   <tbody>
     <tr>
       <td align="left" width="33%">Start Time: <span id="start_time">---</span></td>
-      <td align="center" width="33%"><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button><img id="spinner" style="display:none; margin-bottom: 3px; margin-right: 4px;" align="absmiddle" src="../images/report-spinner.gif" /><span id="current_item">---</span></td>
+      <td align="center" width="33%"><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button><img id="spinner" style="display:none; margin-bottom: 3px; margin-right: 4px;" align="absmiddle" src="[%- cp_security_token -%]/images/report-spinner.gif" /><span id="current_item">---</span></td>
       <td align="right" width="33%">Finish Time: <span id="end_time">---</span></td>
     </tr>
   </tbody>

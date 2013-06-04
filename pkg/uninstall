@@ -28,6 +28,8 @@
 use Cpanel::Version ();
 
 unlink("/usr/local/cpanel/whostmgr/docroot/cgi/addon_securityadvisor.cgi");
+unlink("/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor/index.cgi");
+unlink("/usr/local/cpanel/whostmgr/docroot/addon_plugins/ico-security-advisor.png");
 unlink("/var/cpanel/apps/securityadvisor.conf");
 
 system "/bin/rm", "-rf", "--", "/var/cpanel/addons/securityadvisor/";
