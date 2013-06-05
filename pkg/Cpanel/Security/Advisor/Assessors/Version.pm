@@ -41,8 +41,7 @@ sub generate_advice {
 
 sub _check_cpanel_version {
     my $self = shift;
-	my $security_advisor_obj = $self->{'security_advisor_obj'};
-	
+
 	my $cpsources 			= Cpanel::Config::Sources::loadcpsources();
 	my $update_server 		= defined $cpsources->{'HTTPUPDATE'} ? $cpsources->{'HTTPUPDATE'} : 'http://httpupdate.cpanel.net/';
 	my $httprequest_obj    	= Cpanel::HttpRequest->new( 'hideOutput' => 1 );
@@ -54,17 +53,11 @@ sub _check_cpanel_version {
 	my $latest_version		= '';
 	eval { $latest_version = $httprequest_obj->request( 'host' => $update_server, 'url' => '/cpanelsync/TIERS', 'protocol' => 0, ); };
 	chomp($latest_version);
-
-#	print "$current_tier\n";
-#	print "$current_version\n";
-#	print "$latest_version\n";
-
 	$latest_version =~ /$current_tier:([0-9.]+)/;
 	$latest_version = $1;
-#	print "$latest_version\n";
 
-	if ( $current_version < $latest_version ) {
-		$security_advisor_obj->add_bad_advice(
+	if ( $current_version lt $latest_version ) {
+		$self->add_bad_advice(
 			'text' 			=> ["Current cPanel version is out of date. Current: $current_version, latest: $latest_version"],
 			'suggestion'	=> [
 				'Update cPanel software in the "[output,url,_1,Upgrade to Latest Version,_2,_3]" area',
@@ -74,13 +67,11 @@ sub _check_cpanel_version {
 			],
 		);
 	}
-	elsif ( $current_version >= $latest_version ) {
-		$security_advisor_obj->add_good_advice(
+	elsif ( $current_version ge $latest_version ) {
+		$self->add_good_advice(
 			'text'			=> ["Current cPanel version is up to date: " . $current_version],
 		);
 	}
-
 }
 
-#_check_cpanel_version;
 1;
