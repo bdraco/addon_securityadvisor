@@ -31,7 +31,6 @@ use base 'Cpanel::Security::Advisor::Assessors';
 use Cpanel::Version         ();
 use Cpanel::Config::Sources ();
 use Cpanel::HttpRequest     ();
-use Cpanel::SafeRun::Errors ();
 use Cpanel::Update::Config  ();
 
 sub generate_advice {
