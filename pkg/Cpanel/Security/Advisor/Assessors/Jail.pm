@@ -69,6 +69,7 @@ sub _check_for_unjailed_users {
             push @users_without_jail, '..truncated..';
         }
 
+        my @wheel_users;
         my $output = Cpanel::SafeRun::Full::run(
             'program' => Cpanel::FindBin::findbin('grep'),
             'args'    => [
@@ -87,6 +88,7 @@ sub _check_for_unjailed_users {
             else {
                 for ( my $i = 0; $i <= $#users_without_jail; $i++ ) {
                     if ( $output->{'stdout'} =~ /$users_without_jail[$i]/ ) {
+                        push( @wheel_users, $users_without_jail[$i] );
                         splice( @users_without_jail, $i, 1 );
                     }
                 }
@@ -94,6 +96,21 @@ sub _check_for_unjailed_users {
         }
         else {
             $Cpanel::CPERROR{'grep'} = $output->{'stderr'};
+        }
+
+        if (@wheel_users) {
+            $security_advisor_obj->add_advice(
+                {
+                    'type'       => $Cpanel::Security::Advisor::ADVISE_INFO,
+                    'text'       => [ 'Users with wheel group access: [list_and,_1].', \@wheel_users ],
+                    'suggestion' => [
+                        'Wheel users have access to root. Ensure that only trusted users are shown in the "[output,url,_1,Manage Wheel Group Users,_2,_3]" area.',
+                        '../scripts/modwheel',
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
         }
 
         if (@users_without_jail) {
