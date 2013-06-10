@@ -104,8 +104,8 @@ sub _check_for_unjailed_users {
                     'type'       => $Cpanel::Security::Advisor::ADVISE_INFO,
                     'text'       => [ 'Users with wheel group access: [list_and,_1].', \@wheel_users ],
                     'suggestion' => [
-                        'Wheel users have access to root. Ensure that only trusted users are shown in the "[output,url,_1,Manage Wheel Group Users,_2,_3]" area.',
-                        '../scripts/modwheel',
+                        'Wheel users have access to root. Consider changing these users to jailshell in the "[output,url,_1,Manage Shell Access,_2,_3]" area.',
+                        '../scripts2/manageshells',
                         'target',
                         '_blank'
                     ],
