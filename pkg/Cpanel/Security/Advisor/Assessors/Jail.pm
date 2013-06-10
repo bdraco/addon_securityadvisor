@@ -69,6 +69,33 @@ sub _check_for_unjailed_users {
             push @users_without_jail, '..truncated..';
         }
 
+        my $output = Cpanel::SafeRun::Full::run(
+            'program' => Cpanel::FindBin::findbin('grep'),
+            'args'    => [
+                'wheel',
+                '/etc/group'
+            ],
+            'timeout' => 30,
+        );
+        if ( $output->{'status'} ) {
+            if ( $output->{'stderr'} ) {
+                $Cpanel::CPERROR{'grep'} = "Grep has failed: $output->{'stderr'}";
+            }
+            elsif ( $output->{'timeout'} ) {
+                $Cpanel::CPERROR{'grep'} = "Timeout while attempting to find wheel users.";
+            }
+            else {
+                for ( my $i = 0; $i <= $#users_without_jail; $i++ ) {
+                    if ( $output->{'stdout'} =~ /$users_without_jail[$i]/ ) {
+                        splice( @users_without_jail, $i, 1 );
+                    }
+                }
+            }
+        }
+        else {
+            $Cpanel::CPERROR{'grep'} = $output->{'stderr'};
+        }
+
         if (@users_without_jail) {
             $security_advisor_obj->add_advice(
                 {
