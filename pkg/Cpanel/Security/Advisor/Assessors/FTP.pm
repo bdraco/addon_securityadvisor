@@ -44,7 +44,7 @@ sub _check_anon_ftp {
 
     if ( $anonftp =~ /yes/i ) {
         $self->add_advice(
-            'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+            'type'       => $Cpanel::Security::Advisor::ADVISE_WARN,
             'text'       => ['Anonymous FTP is allowed.'],
             'suggestion' => [
                 'Disable Anonymous FTP in the "[output,url,_1,FTP Server Configuration,_2,_3]" area.',
