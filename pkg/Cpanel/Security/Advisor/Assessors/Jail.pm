@@ -69,6 +69,50 @@ sub _check_for_unjailed_users {
             push @users_without_jail, '..truncated..';
         }
 
+        my @wheel_users;
+        my $output = Cpanel::SafeRun::Full::run(
+            'program' => Cpanel::FindBin::findbin('grep'),
+            'args'    => [
+                'wheel',
+                '/etc/group'
+            ],
+            'timeout' => 30,
+        );
+        if ( $output->{'status'} ) {
+            if ( $output->{'stderr'} ) {
+                $Cpanel::CPERROR{'grep'} = "Grep has failed: $output->{'stderr'}";
+            }
+            elsif ( $output->{'timeout'} ) {
+                $Cpanel::CPERROR{'grep'} = "Timeout while attempting to find wheel users.";
+            }
+            else {
+                for ( my $i = 0; $i <= $#users_without_jail; $i++ ) {
+                    if ( $output->{'stdout'} =~ /$users_without_jail[$i]/ ) {
+                        push( @wheel_users, $users_without_jail[$i] );
+                        splice( @users_without_jail, $i, 1 );
+                    }
+                }
+            }
+        }
+        else {
+            $Cpanel::CPERROR{'grep'} = $output->{'stderr'};
+        }
+
+        if (@wheel_users) {
+            $security_advisor_obj->add_advice(
+                {
+                    'type'       => $Cpanel::Security::Advisor::ADVISE_INFO,
+                    'text'       => [ 'Users with wheel group access: [list_and,_1].', \@wheel_users ],
+                    'suggestion' => [
+                        'Wheel users have access to root. Consider changing these users to jailshell in the "[output,url,_1,Manage Shell Access,_2,_3]" area.',
+                        '../scripts2/manageshells',
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
+        }
+
         if (@users_without_jail) {
             $security_advisor_obj->add_advice(
                 {
