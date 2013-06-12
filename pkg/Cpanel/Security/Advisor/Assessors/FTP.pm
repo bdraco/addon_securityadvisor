@@ -1,4 +1,4 @@
-package Cpanel::Security::Advisor::Assessors::Version;
+package Cpanel::Security::Advisor::Assessors::FTP;
 
 # Copyright (c) 2013, cPanel, Inc.
 # All rights reserved.
@@ -28,47 +28,36 @@ package Cpanel::Security::Advisor::Assessors::Version;
 
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
-use Cpanel::Version         ();
-use Cpanel::Config::Sources ();
-use Cpanel::HttpRequest     ();
-use Cpanel::Update::Config  ();
+use Cpanel::FtpUtils::Config ();
 
 sub generate_advice {
     my ($self) = @_;
-    $self->_check_cpanel_version();
+    $self->_check_anon_ftp();
 }
 
-sub _check_cpanel_version {
-    my $self = shift;
+sub _check_anon_ftp {
+    my ($self) = @_;
 
-    my $cpsources       = Cpanel::Config::Sources::loadcpsources();
-    my $update_server   = defined $cpsources->{'HTTPUPDATE'} ? $cpsources->{'HTTPUPDATE'} : 'http://httpupdate.cpanel.net/';
-    my $httprequest_obj = Cpanel::HttpRequest->new( 'hideOutput' => 1 );
+    my $ftp     = Cpanel::FtpUtils::Config->new();
+    my $config  = $ftp->read_settings_from_conf_file;
+    my $anonftp = $config->{'cPanelAnonymousAccessAllowed'};
 
-    my $config          = Cpanel::Update::Config::load;
-    my $current_tier    = $config->{'CPANEL'};
-    my $current_version = Cpanel::Version::get_version_full();
-
-    my $latest_version = '';
-    eval { $latest_version = $httprequest_obj->request( 'host' => $update_server, 'url' => '/cpanelsync/TIERS', 'protocol' => 0, ); };
-    chomp($latest_version);
-    $latest_version =~ /$current_tier:([0-9.]+)/;
-    $latest_version = $1;
-
-    if ( $current_version lt $latest_version ) {
-        $self->add_bad_advice(
-            'text'       => ["Current cPanel version is out of date. Current: $current_version, latest: $latest_version"],
+    if ( $anonftp =~ /yes/i ) {
+        $self->add_advice(
+            'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+            'text'       => ['Anonymous FTP is allowed.'],
             'suggestion' => [
-                'Update cPanel software in the "[output,url,_1,Upgrade to Latest Version,_2,_3]" area',
-                '../scripts2/upcpform',
+                'Disable Anonymous FTP in the "[output,url,_1,FTP Server Configuration,_2,_3]" area.',
+                '../scripts2/ftpconfiguration',
                 'target',
-                'blank'
+                '_blank'
             ],
         );
     }
-    elsif ( $current_version ge $latest_version ) {
-        $self->add_good_advice(
-            'text' => [ "Current cPanel version is up to date: " . $current_version ],
+    elsif ( $anonftp =~ /no/i ) {
+        $self->add_advice(
+            'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
+            'text' => ['Anonymous FTP is disabled.'],
         );
     }
 }
