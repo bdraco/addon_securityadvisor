@@ -60,6 +60,7 @@ else {
     install( "-o", "root", "-g", "wheel", "-m" . "0600", "appconfig/securityadvisor.conf", "/var/cpanel/apps/securityadvisor.conf" );
 }
 
+mkdir( "/usr/local/cpanel/whostmgr/docroot/addon_plugins", 0755 ) if !-e "/usr/local/cpanel/whostmgr/docroot/addon_plugins";
 install( "-o", "root", "-g", "wheel", "-m" . "0600", "icon/ico-security-advisor.png", "/usr/local/cpanel/whostmgr/docroot/addon_plugins/ico-security-advisor.png" );
 
 print "cPanel Security Advisor installed into WHM.\n";
