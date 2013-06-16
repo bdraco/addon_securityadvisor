@@ -79,8 +79,8 @@ sub _check_for_apache_chroot {
                         : 'Upgrade to cPanel 11.38 or later, then enable “Jail Apache” in the “[output,url,_1,Tweak Settings,_4,_5]” area, and change users to jailshell in the “[output,url,_2,Manage Shell Access,_4,_5]” area.  Consider a more robust solution by using “[output,url,_3,CageFS on CloudLinux,_4,_5]”'
 
                     ),
-                    '../scripts2/tweaksettings?find=jailapache',
-                    '../scripts2/manageshells',
+                    $self->base_path('scripts2/tweaksettings?find=jailapache'),
+                    $self->base_path('scripts2/manageshells'),
                     'http://cpanel.net/cpanel-whm/cloudlinux/',
                     'target',
                     '_blank'
@@ -112,7 +112,7 @@ sub _check_for_easyapache_build {
                 'text'       => ['EasyApache3 has updates available.'],
                 'suggestion' => [
                     '[output,url,_1,EasyApache3,_2,_3] needs to be run periodically to update Apache, PHP and other public server functionality to the latest versions. Updates to EasyApache3 often fix security vulnernabilities in this software.',
-                    '../cgi/easyapache.pl?action=_pre_cpanel_sync_screen',
+                    $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'),
                     'target',
                     '_blank'
                 ],

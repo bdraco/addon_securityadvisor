@@ -67,7 +67,7 @@ sub _check_for_brute_force_protection {
                 'text'       => ['No brute force protection detected'],
                 'suggestion' => [
                     'Enable cPHulk Brute Force Protection in the “[output,url,_1,cPHulk Brute Force Protection,_2,_3]” area.',
-                    '../cgi/tweakcphulk.cgi',
+                    $self->base_path('cgi/tweakcphulk.cgi'),
                     'target',
                     '_blank'
 

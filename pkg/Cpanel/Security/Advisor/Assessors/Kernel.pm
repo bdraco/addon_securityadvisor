@@ -62,10 +62,10 @@ sub _check_for_kernel_version {
                 'text'       => ["Current kernel version is out of date. current: $current_kernelversion, expected: $latest_kernelversion"],
                 'suggestion' => [
                     'Update current system software in the "[output,url,_1,Update System Software,_2,_3]" area, and then reboot the system in the "[output,url,_4,Graceful Server Reboot,_5,_6]" area.',
-                    '../scripts/dialog?dialog=updatesyssoftware',
+                    $self->base_path('scripts/dialog?dialog=updatesyssoftware'),
                     'target',
                     '_blank',
-                    '../scripts/dialog?dialog=reboot',
+                    $self->base_path('scripts/dialog?dialog=reboot'),
                     'target',
                     '_blank'
                 ],
@@ -76,7 +76,7 @@ sub _check_for_kernel_version {
                 'text'       => ["A newer kernel is installed, however the system has not been rebooted. running: $running_kernelversion, installed: $current_kernelversion"],
                 'suggestion' => [
                     'Reboot the system in the "[output,url,_1,Graceful Server Reboot,_2,_3]" area.',
-                    '../scripts/dialog?dialog=reboot',
+                    $self->base_path('scripts/dialog?dialog=reboot'),
                     'target',
                     '_blank'
                 ],

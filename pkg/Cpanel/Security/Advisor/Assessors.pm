@@ -44,6 +44,16 @@ sub new {
     return $self;
 }
 
+sub base_path {
+    my ( $self, $path ) = @_;
+
+    if ( $ENV{'REQUEST_URI'} =~ m{cgi/addons/securityadvisor} ) {
+        return '../../../' . $path;
+    }
+
+    return '../' . $path;
+}
+
 sub add_advice {
     my ( $self, %opts ) = @_;
 

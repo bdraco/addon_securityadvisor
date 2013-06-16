@@ -48,7 +48,7 @@ sub _is_frontpage_installed {
                 'text'       => ['Frontpage is installed'],
                 'suggestion' => [
                     'Rebuild using “[output,url,_1,EasyApache,_2,_3]” without Frontpage selected, then uninstall the Frontpage RPM (rpm -e frontpage)',
-                    '../cgi/easyapache.pl?action=_pre_cpanel_sync_screen', 'target', '_blank',
+                    $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'), 'target', '_blank',
                 ],
             }
         );

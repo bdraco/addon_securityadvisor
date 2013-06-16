@@ -46,7 +46,7 @@ sub _check_for_ssh_settings {
             'text'       => ['SSH password authentication is enabled.'],
             'suggestion' => [
                 'Disable SSH password authentication in the “[output,url,_1,SSH Password Authorization Tweak,_2,_3]” area',
-                '../scripts2/tweaksshauth',
+                $self->base_path('scripts2/tweaksshauth'),
                 'target',
                 '_blank'
             ],
@@ -64,7 +64,7 @@ sub _check_for_ssh_settings {
             'text'       => ['SSH direct root logins are permitted.'],
             'suggestion' => [
                 'Manually edit /etc/ssh/sshd_config and change PermitRootLogin to “no”, then restart SSH in the “[output,url,_1,Restart SSH,_2,_3]” area',
-                '../scripts/ressshd',
+                $self->base_path('scripts/ressshd'),
                 'target',
                 '_blank'
             ],
@@ -94,7 +94,7 @@ sub _check_for_ssh_version {
                 'text'       => ['Current SSH version is out of date.'],
                 'suggestion' => [
                     'Update current system software in the "[output,url,_1,Update System Software,_2,_3]" area',
-                    '../scripts/dialog?dialog=updatesyssoftware',
+                    $self->base_path('scripts/dialog?dialog=updatesyssoftware'),
                     'target',
                     '_blank'
                 ],

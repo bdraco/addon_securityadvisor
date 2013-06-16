@@ -42,7 +42,7 @@ sub generate_advice {
             'text'       => ['Cannot connect to MySQL server.'],
             'suggestion' => [
                 'Enable MySQL database service',
-                '../scripts/srvmng',
+                $self->base_path('scripts/srvmng'),
                 'target',
                 '_blank'
             ],
