@@ -88,7 +88,7 @@ sub _check_for_unjailed_users {
                     'type'       => $Cpanel::Security::Advisor::ADVISE_INFO,
                     'text'       => [ 'Users with wheel group access: [list_and,_1].', \@wheel_users ],
                     'suggestion' => [
-                        'Users in the “[asis,wheel]” group may run “[asis,su]”. Consider removing removing these users from the “[asis,wheel]” group in the “[output,url,_1,Manage Wheel Group Users,_2,_3]” area if they do not need to be in the “[asis,wheel]” group.',
+                        'Users in the “[asis,wheel]” group may run “[asis,su]”. Consider removing these users from the “[asis,wheel]” group in the “[output,url,_1,Manage Wheel Group Users,_2,_3]” area if they do not need to be in the “[asis,wheel]” group.',
                         $self->base_path('scripts/modwheel'),
                         'target',
                         '_blank'
