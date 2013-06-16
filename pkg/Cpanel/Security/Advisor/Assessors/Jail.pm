@@ -60,13 +60,41 @@ sub _check_for_unjailed_users {
 
         Cpanel::PwCache::init_passwdless_pwcache();
         my %cpusers = map { $_ => undef } Cpanel::Config::Users::getcpusers();
+        my %wheel_users_hash = map { $_ => 1 } split( ' ', ( getgrnam('wheel') )[3] );
+        delete $wheel_users_hash{'root'};    # We don't care about root being in the wheel group
 
         my $pwcache_ref = Cpanel::PwCache::fetch_pwcache();
-        my @users_without_jail = map { $_->[0] } grep { exists $cpusers{ $_->[0] } && $_->[8] && $_->[8] !~ m{(?:no|jail)shell} } @$pwcache_ref;    #aka users without jail or noshell
+        my @users = map { $_->[0] } grep { exists $cpusers{ $_->[0] } && $_->[8] && $_->[8] !~ m{(?:no|jail)shell} } @$pwcache_ref;    #aka users without jail or noshell
+        my @users_without_jail;
+        my @wheel_users;
+
+        foreach my $user (@users) {
+            if ( $wheel_users_hash{$user} ) {
+                push( @wheel_users, $user );
+            }
+            else {
+                push( @users_without_jail, $user );
+            }
+        }
 
         if ( scalar @users_without_jail > 100 ) {
             splice( @users_without_jail, 100 );
             push @users_without_jail, '..truncated..';
+        }
+
+        if (@wheel_users) {
+            $security_advisor_obj->add_advice(
+                {
+                    'type'       => $Cpanel::Security::Advisor::ADVISE_INFO,
+                    'text'       => [ 'Users with wheel group access: [list_and,_1].', \@wheel_users ],
+                    'suggestion' => [
+                        'Wheel users have access to root. Consider changing these users to jaillshell in the "[output,url,_1,Manage Shell Access,_2,_3]" area.',
+                        '../scripts2/manageshells',
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
         }
 
         if (@users_without_jail) {
