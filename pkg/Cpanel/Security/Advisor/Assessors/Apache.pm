@@ -58,7 +58,7 @@ sub _check_for_apache_chroot {
             }
         );
     }
-    elsif ( -x '/usr/bin/cagefsctl' ) {
+    elsif ( -x '/usr/bin/cagefsctl' || -x '/usr/sbin/cagefsctl' ) {
         $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
