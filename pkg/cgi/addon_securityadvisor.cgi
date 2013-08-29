@@ -1,6 +1,6 @@
 #!/bin/sh
-eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'    # -*-mode:perl-*-
-  if 0;                                                                                                                                                                 # no critic qw(ProhibitStringyEval RequireUseStrict)
+eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'    ## no critic qw(ProhibitStringyEval RequireUseStrict) -*-mode:perl-*-
+  if 0;
 
 #!/usr/bin/perl
 #WHMADDON:addonupdates:Security Advisor Tool
