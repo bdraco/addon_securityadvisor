@@ -32,6 +32,8 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_is_tomcat5_installed();
+
+    return 1;
 }
 
 sub _is_tomcat5_installed {
@@ -50,6 +52,8 @@ sub _is_tomcat5_installed {
             }
         );
     }
+
+    return 1;
 }
 
 1;

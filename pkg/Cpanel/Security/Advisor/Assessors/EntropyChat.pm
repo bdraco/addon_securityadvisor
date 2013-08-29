@@ -34,6 +34,8 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_check_entropy_chat_enabled;
+
+    return 1;
 }
 
 sub _check_entropy_chat_enabled {
@@ -64,5 +66,7 @@ sub _check_entropy_chat_enabled {
         );
 
     }
+
+    return 1;
 }
 1;
