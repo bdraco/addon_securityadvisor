@@ -33,6 +33,8 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_kernel_version;
+
+    return 1;
 }
 
 sub _check_for_kernel_version {
@@ -89,6 +91,7 @@ sub _check_for_kernel_version {
         $self->add_warn_advice( 'text' => ['Unable to determine kernel version'], 'suggestion' => ['Ensure that yum and rpm are working on your system.'] );
     }
 
+    return 1;
 }
 
 1;

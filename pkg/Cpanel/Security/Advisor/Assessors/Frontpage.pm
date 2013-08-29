@@ -33,6 +33,8 @@ use Cpanel::SafeRun::Simple;
 sub generate_advice {
     my ($self) = @_;
     $self->_is_frontpage_installed();
+
+    return 1;
 }
 
 sub _is_frontpage_installed {
@@ -53,6 +55,8 @@ sub _is_frontpage_installed {
             }
         );
     }
+
+    return 1;
 }
 
 1;

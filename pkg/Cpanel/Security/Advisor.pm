@@ -73,16 +73,23 @@ sub new {
     foreach my $module (@modules) {
         my $module_name = $module;
         $module_name =~ s/(.*)\.pm$/Cpanel::Security::Advisor::Assessors::$1/g;
-        my $object;
-        eval "require $module_name; \$object = $module_name->new(\$self);";
-        if ( !$@ ) {
-            push @assessors, { name => $module_name, object => $object };
-            my $runtime = ( $object->can('estimated_runtime') ? $object->estimated_runtime() : 1 );
-            $self->_internal_message( { type => 'mod_load', state => 1, module => $module_name, runtime => $runtime } );
-        }
-        else {
+
+        eval "require $module_name;";
+        if ($@) {
+            $self->{'logger'}->("Failed to load $module_name: $@");
             $self->_internal_message( { type => 'mod_load', state => 0, module => $module_name, message => "$@" } );
+            next;
         }
+        my $object = eval { "$module_name"->new($self); };
+        if ($@) {
+            $self->{'logger'}->("Failed to new $module_name: $@");
+            $self->_internal_message( { type => 'mod_load', state => 0, module => $module_name, message => "$@" } );
+            next;
+        }
+
+        push @assessors, { name => $module_name, object => $object };
+        my $runtime = ( $object->can('estimated_runtime') ? $object->estimated_runtime() : 1 );
+        $self->_internal_message( { type => 'mod_load', state => 1, module => $module_name, runtime => $runtime } );
     }
 
     return $self;
@@ -99,6 +106,7 @@ sub generate_advice {
     }
     $self->_internal_message( { type => 'scan_run', state => 1 } );
     $self->{'comet'}->purgeclient();
+    return;
 }
 
 sub _internal_message {
@@ -112,6 +120,7 @@ sub _internal_message {
             }
         ),
     );
+    return;
 }
 
 sub add_advice {
@@ -137,6 +146,7 @@ sub add_advice {
             }
         ),
     );
+    return;
 }
 
 sub expand_advice_maketext {
@@ -145,6 +155,8 @@ sub expand_advice_maketext {
         next unless defined $advice->{$param};
         $advice->{$param} = $self->{'locale'}->maketext( ref $advice->{$param} eq 'ARRAY' ? @{ $advice->{$param} } : $advice->{$param} );
     }
+
+    return;
 }
 
 1;

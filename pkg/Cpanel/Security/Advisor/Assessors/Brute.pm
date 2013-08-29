@@ -33,6 +33,8 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_brute_force_protection();
+
+    return 1;
 }
 
 sub _check_for_brute_force_protection {
@@ -76,6 +78,7 @@ sub _check_for_brute_force_protection {
         );
     }
 
+    return 1;
 }
 
 1;

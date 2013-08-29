@@ -57,31 +57,31 @@ sub base_path {
 sub add_advice {
     my ( $self, %opts ) = @_;
 
-    $self->{'security_advisor_obj'}->add_advice( {%opts} );
+    return $self->{'security_advisor_obj'}->add_advice( {%opts} );
 }
 
 sub add_good_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD );
+    return $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD );
 }
 
 sub add_info_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_INFO );
+    return $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_INFO );
 }
 
 sub add_warn_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_WARN );
+    return $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_WARN );
 }
 
 sub add_bad_advice {
     my ( $self, %opts ) = @_;
 
-    $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_BAD );
+    return $self->add_advice( %opts, 'type' => $Cpanel::Security::Advisor::ADVISE_BAD );
 }
 
 sub get_available_rpms {

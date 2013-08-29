@@ -35,6 +35,8 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_unjailed_users();
+
+    return 1;
 }
 
 sub _check_for_unjailed_users {
@@ -114,6 +116,7 @@ sub _check_for_unjailed_users {
         }
     }
 
+    return 1;
 }
 
 1;

@@ -54,7 +54,7 @@ sub generate_advice {
     $self->_check_for_db_test();
     $self->_check_for_anonymous_users();
 
-    return;
+    return 1;
 }
 
 sub dbh {
@@ -89,6 +89,7 @@ sub _check_for_db_test {
 
     }
 
+    return 1;
 }
 
 sub _check_for_anonymous_users {
@@ -117,18 +118,20 @@ sub _check_for_anonymous_users {
         );
     }
 
-    return;
+    return 1;
 }
 
 sub _check_for_mysql_users {
 
     # TODO
+    return 1;
 }
 
 sub _check_for_mysql_settings {
     my ($self) = @_;
 
     # TODO
+    return 1;
 }
 
 1;

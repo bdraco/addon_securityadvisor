@@ -33,6 +33,8 @@ use Cpanel::SafeRun::Simple;
 sub generate_advice {
     my ($self) = @_;
     $self->_is_iptables_active();
+
+    return 1;
 }
 
 sub _is_iptables_active {
@@ -57,6 +59,8 @@ sub _is_iptables_active {
             );
         }
     }
+
+    return 1;
 }
 
 1;

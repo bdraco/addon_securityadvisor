@@ -34,6 +34,8 @@ sub generate_advice {
     my ($self) = @_;
     $self->_check_for_ssh_settings;
     $self->_check_for_ssh_version;
+
+    return 1;
 }
 
 sub _check_for_ssh_settings {
@@ -76,6 +78,8 @@ sub _check_for_ssh_settings {
         );
 
     }
+
+    return 1;
 }
 
 sub _check_for_ssh_version {
@@ -110,6 +114,7 @@ sub _check_for_ssh_version {
         );
     }
 
+    return 1;
 }
 
 1;

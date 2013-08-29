@@ -37,6 +37,8 @@ sub generate_advice {
     my ($self) = @_;
     $self->_check_for_apache_chroot();
     $self->_check_for_easyapache_build();
+
+    return 1;
 }
 
 sub estimated_runtime {
@@ -89,6 +91,7 @@ sub _check_for_apache_chroot {
         );
     }
 
+    return 1;
 }
 
 sub _check_for_easyapache_build {
@@ -119,6 +122,7 @@ sub _check_for_easyapache_build {
             }
         );
     }
+    return 1;
 }
 
 1;

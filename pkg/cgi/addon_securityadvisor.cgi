@@ -133,8 +133,8 @@ sub _start_scan {
     }
     else {
         POSIX::setsid();
-        open STDOUT, ">", "/dev/null";
-        open STDIN,  "<", "/dev/null";
+        open STDOUT, ">&STDERR";
+        open STDIN, "<", "/dev/null";
         my $advisor = Cpanel::Security::Advisor->new( 'comet' => $comet, 'channel' => $channel );
 
         $advisor->generate_advice();

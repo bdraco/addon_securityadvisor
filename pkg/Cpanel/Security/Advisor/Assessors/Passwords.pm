@@ -32,6 +32,8 @@ use base 'Cpanel::Security::Advisor::Assessors';
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_low_pwstrength;
+
+    return 1;
 }
 
 sub _check_for_low_pwstrength {
@@ -93,6 +95,7 @@ sub _check_for_low_pwstrength {
         );
     }
 
+    return 1;
 }
 
 1;
