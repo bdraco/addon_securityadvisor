@@ -47,7 +47,7 @@ sub _check_for_nobody_tracking {
         $security_advisor_obj->add_advice(
             {
                 'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
-                'text' => ['The psuedo-user “nobody” is not permitted to send email.'],
+                'text' => ['The pseudo-user “nobody” is not permitted to send email.'],
             }
         );
     }
@@ -55,7 +55,7 @@ sub _check_for_nobody_tracking {
         $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['The psuedo-user “nobody” is permitted to send email.'],
+                'text'       => ['The pseudo-user “nobody” is permitted to send email.'],
                 'suggestion' => [
                     'Enable “Prevent "nobody" from sending mail” in the “[output,url,_1,Tweak Settings,_2,_3]” area',
                     $self->base_path('scripts2/tweaksettings?find=nobodyspam'),
@@ -112,7 +112,7 @@ sub _check_for_nobody_tracking {
         $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['Apache is not being queried to determine the actual sender when mail originates from the “nobody” psuedo-user.'],
+                'text'       => ['Apache is not being queried to determine the actual sender when mail originates from the “nobody” pseudo-user.'],
                 'suggestion' => [
                     (
                         $Cpanel::Version::MAJORVERSION > 11.35
