@@ -73,7 +73,7 @@ sub _check_for_apache_chroot {
         $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['Apache vhosts are not chroot()ed.'],
+                'text'       => ['Apache vhosts are not segmented or chroot()ed.'],
                 'suggestion' => [
                     (
                         $Cpanel::Version::MAJORVERSION > 11.37
