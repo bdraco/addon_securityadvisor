@@ -152,12 +152,13 @@ EOM
 
     $text =~ s/\n#[ \t]+Copyright.*?DAMAGE\./$license/s;
 
-    Cpanel::FileUtils::Write::writefile( $file, $text, 0644 );
 
     if ( $file =~ m/\.cgi$/ ) {
+        Cpanel::FileUtils::Write::writefile( $file, $text, 0700 );
         system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-x', '-b', $file;
     }
     else {
+        Cpanel::FileUtils::Write::writefile( $file, $text, 0644 );
         system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-b', $file;
     }
 
