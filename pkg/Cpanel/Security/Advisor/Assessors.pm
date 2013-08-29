@@ -47,7 +47,10 @@ sub new {
 sub base_path {
     my ( $self, $path ) = @_;
 
-    if ( $ENV{'REQUEST_URI'} =~ m{cgi/addons/securityadvisor} ) {
+    if ( $ENV{'REQUEST_URI'} =~ m{cgi/securityadvisor} ) {
+        return '../../' . $path;
+    }
+    elsif ( $ENV{'REQUEST_URI'} =~ m{cgi/addons/securityadvisor} ) {
         return '../../../' . $path;
     }
 
