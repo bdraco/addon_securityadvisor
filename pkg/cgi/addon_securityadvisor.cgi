@@ -1,5 +1,5 @@
 #!/bin/sh
-eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'    # -*-mode:perl-*-
+eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel/3rdparty/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'    # -*-mode:perl-*- no critic qw(eval)
   if 0;
 
 #!/usr/bin/perl
@@ -76,6 +76,8 @@ sub run {
             },
         );
     }
+
+    return 1;
 }
 
 sub _check_acls {
@@ -97,7 +99,10 @@ EOM
 
 sub _headers {
     my $content_type = shift;
+
     print "Content-type: ${content_type}; charset=utf-8\r\n\r\n";
+
+    return 1;
 }
 
 # Start a new scan writing to the comet channel specified
@@ -133,8 +138,8 @@ sub _start_scan {
     }
     else {
         POSIX::setsid();
-        open STDOUT, ">&STDERR";
-        open STDIN, "<", "/dev/null";
+        open STDOUT, ">&STDERR" or die "Could not redirect STDOUT to STDERR";
+        open STDIN, "<", "/dev/null" or die "Could not attach STDIN to /dev/null";
         my $advisor = Cpanel::Security::Advisor->new( 'comet' => $comet, 'channel' => $channel );
 
         $advisor->generate_advice();
