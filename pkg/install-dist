@@ -93,7 +93,7 @@ chdir("/usr/local/cpanel") or die "Could not chdir to /usr/local/cpanel: $!";
 
 system $git_bin, "add", "Cpanel/Security/Advisor", "Cpanel/Security/Advisor.pm", "whostmgr/docroot/themes/x/icons/ico-security-advisor.png", 'whostmgr/docroot/templates/securityadvisor', 'whostmgr/docroot/cgi/securityadvisor/index.cgi';
 
-system $git_bin, "commit", "-m", "Update cPanel Security Advisor\ncase XXXXX: Update cPanel Security Advisor\n";
+#system $git_bin, "commit", "-m", "Update cPanel Security Advisor\ncase XXXXX: Update cPanel Security Advisor\n";
 
 chdir($pwd) or die "Could not return to original directory: $cwd: $!";
 

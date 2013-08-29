@@ -34,6 +34,8 @@ eval 'if [ -x /usr/local/cpanel/3rdparty/bin/perl ]; then exec /usr/local/cpanel
 
 package cgi::addon_securityadvisor;
 
+use strict;
+
 BEGIN {
     unshift @INC, '/var/cpanel/addons/securityadvisor/perl', '/usr/local/cpanel';
 }
