@@ -46,10 +46,17 @@ sub new {
     die "No comet object provided"  unless ( $options{'comet'} );
     die "No comet channel provided" unless ( $options{'channel'} );
 
-    opendir( my $advisor_module_dir, "/var/cpanel/addons/securityadvisor/perl/Cpanel/Security/Advisor/Assessors" );
-    my @modules = sort grep { m/\.pm$/ } readdir($advisor_module_dir);
-    closedir($advisor_module_dir);
-
+    my %all_modules;
+    foreach my $dir ( '/usr/local/cpanel/Cpanel/Security/Advisor/Assessors', '/var/cpanel/addons/securityadvisor/perl/Cpanel/Security/Advisor/Assessors' ) {
+        if ( opendir( my $advisor_module_dir, $dir ) ) {
+            foreach my $mod ( readdir($advisor_module_dir) ) {
+                next if $mod !~ m/\.pm$/;
+                $all_modules{$mod} = 1;
+            }
+            closedir($advisor_module_dir);
+        }
+    }
+    my @modules = sort keys %all_modules;
     my @assessors;
 
     my $self = bless {
@@ -57,7 +64,7 @@ sub new {
         'logger'    => Cpanel::Logger->new(),
         'cpconf'    => scalar Cpanel::Config::LoadCpConf::loadcpconf(),
         '_version'  => $VERISON,
-        '_cache'     => {},
+        '_cache'    => {},
         'comet'     => $options{'comet'},
         'channel'   => $options{'channel'},
         'locale'    => Cpanel::Locale->get_handle(),

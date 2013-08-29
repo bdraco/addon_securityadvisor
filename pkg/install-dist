@@ -1,0 +1,107 @@
+#!/usr/local/cpanel/3rdparty/bin/perl
+# Copyright (c) 2013, cPanel, Inc.
+# All rights reserved.
+# http://cpanel.net
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the owner nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL  BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+use Cwd             ();
+use Cpanel::Version ();
+
+if ( $Cpanel::Version::MAJORVERSION < 11.34 ) {
+    #
+    #  Note: probably works fine on 11.34+ but untested
+    #  and its going to advise you to enable security features
+    #  that are not available on older versions.  We could
+    #  add versioning in the future
+    #
+    print "This addon requires 11.34 or later.\n";
+    exit(1);
+}
+elsif ( !-e '/var/cpanel/dev_sandbox' ) {
+    print "This installer script is only intended to run on internal cPanel systems.\n";
+    print "Please use the standard install script (install) instead of $0\n";
+    exit(1);
+}
+
+my $git_bin = '/usr/local/cpanel/3rdparty/bin/git';
+
+my $pwd = Cwd::cwd();
+
+chdir("/usr/local/cpanel") or die "Could not chdir to /usr/local/cpanel: $!";
+
+# Remove old modules
+system $git_bin, 'rm', '-rf', 'Cpanel/Security/Advisor';
+system $git_bin, 'rm', '-f',  'Cpanel/Security/Advisor.pm';
+
+# Remove old templstes
+system $git_bin, 'rm', '-rf', '/usr/local/cpanel/whostmgr/docroot/templates/securityadvisor';
+
+# Remove old cgi
+system $git_bin, 'rm', '-rf', '/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor/index.cgi';
+
+# Remove old icon
+system $git_bin, 'rm', '-rf', '/usr/local/cpanel/whostmgr/docroot/themes/x/icons/ico-security-advisor.png';
+
+chdir($pwd) or die "Could not return to original directory: $cwd: $!";
+
+# Install the new version
+system '/usr/bin/rsync', '-rlptD', 'templates/', '/usr/local/cpanel/whostmgr/docroot/templates/securityadvisor/';
+system '/usr/bin/rsync', '-rlptD', 'Cpanel/Security/Advisor/', '/usr/local/cpanel/Cpanel/Security/Advisor/';
+install(
+    "-o", "root", "-g", "wheel", "-m" . "0644",
+    'Cpanel/Security/Advisor.pm',
+    '/usr/local/cpanel/Cpanel/Security/Advisor.pm'
+);
+install(
+    "-o",
+    "root",
+    "-g",
+    "wheel",
+    "-m" . "0600",
+    "icon/ico-security-advisor.png",
+    "/usr/local/cpanel/whostmgr/docroot/themes/x/icons/ico-security-advisor.png"
+);
+install(
+    "-o", "root", "-g", "wheel",
+    "-m" . "0700",
+    "cgi/addon_securityadvisor.cgi",
+    "/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor/index.cgi"
+);
+
+chdir("/usr/local/cpanel") or die "Could not chdir to /usr/local/cpanel: $!";
+
+system $git_bin, "add", "Cpanel/Security/Advisor", "Cpanel/Security/Advisor.pm", "whostmgr/docroot/themes/x/icons/ico-security-advisor.png", 'whostmgr/docroot/templates/securityadvisor', 'whostmgr/docroot/cgi/securityadvisor/index.cgi';
+
+system $git_bin, "commit", "-m", "Update cPanel Security Advisor\ncase XXXXX: Update cPanel Security Advisor\n";
+
+chdir($pwd) or die "Could not return to original directory: $cwd: $!";
+
+print "cPanel Security Advisor installed into WHM (distro mode).\n";
+
+exit(0);
+
+sub install {
+    system( "/usr/bin/install", @_ );
+}
+

@@ -62,10 +62,15 @@ sub run {
     else {
         _headers("text/html");
 
+        my $template_file =
+          -e '/var/cpanel/addons/securityadvisor/templates/main.tmpl'
+          ? '/var/cpanel/addons/securityadvisor/templates/main.tmpl'
+          : '/usr/local/cpanel/whostmgr/docroot/templates/securityadvisor/main.tmpl';
+
         Cpanel::Template::process_template(
             'whostmgr',
             {
-                'template_file' => '/var/cpanel/addons/securityadvisor/templates/main.tmpl',
+                'template_file' => $template_file,
             },
         );
     }
