@@ -82,6 +82,9 @@ install(
     "icon/ico-security-advisor.png",
     "/usr/local/cpanel/whostmgr/docroot/themes/x/icons/ico-security-advisor.png"
 );
+
+mkdir( "/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor", 0700 );
+
 install(
     "-o", "root", "-g", "wheel",
     "-m" . "0700",
