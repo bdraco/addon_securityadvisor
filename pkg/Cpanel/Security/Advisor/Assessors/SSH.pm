@@ -80,7 +80,6 @@ sub _check_for_ssh_settings {
 
 sub _check_for_ssh_version {
     my ($self) = @_;
-    my ( $latest_sshversion, $current_sshversion );
 
     my $installed_rpms = $self->get_installed_rpms();
     my $available_rpms = $self->get_available_rpms();
