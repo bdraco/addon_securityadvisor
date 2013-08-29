@@ -57,7 +57,7 @@ chdir("/usr/local/cpanel") or die "Could not chdir to /usr/local/cpanel: $!";
 system $git_bin, 'rm', '-rf', 'Cpanel/Security/Advisor';
 system $git_bin, 'rm', '-f',  'Cpanel/Security/Advisor.pm';
 
-# Remove old templstes
+# Remove old templates
 system $git_bin, 'rm', '-rf', '/usr/local/cpanel/whostmgr/docroot/templates/securityadvisor';
 
 # Remove old cgi
@@ -98,6 +98,8 @@ install(
 chdir("/usr/local/cpanel") or die "Could not chdir to /usr/local/cpanel: $!";
 
 _update_inline_licenses();
+
+_update_template("/usr/local/cpanel/whostmgr/docroot/templates/securityadvisor/main.tmpl");
 
 system $git_bin, "add", "Cpanel/Security/Advisor", "Cpanel/Security/Advisor.pm", "whostmgr/docroot/themes/x/icons/ico-security-advisor.png", 'whostmgr/docroot/templates/securityadvisor', 'whostmgr/docroot/cgi/securityadvisor/index.cgi';
 
@@ -152,7 +154,6 @@ EOM
 
     $text =~ s/\n#[ \t]+Copyright.*?DAMAGE\./$license/s;
 
-
     if ( $file =~ m/\.cgi$/ ) {
         Cpanel::FileUtils::Write::writefile( $file, $text, 0700 );
         system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-x', '-b', $file;
@@ -163,4 +164,19 @@ EOM
     }
 
     unlink("$file.bak");
+}
+
+sub _update_template {
+    my ($file) = @_;
+
+    my $shortfile = $file;
+    $shortfile =~ s{^/usr/local/cpanel/}{}g;
+
+    print "[$shortfile]\n";
+
+    my $text = Cpanel::LoadFile::loadfile($file);
+
+    $text =~ s{/addon_plugins/}{}g;
+
+    Cpanel::FileUtils::Write::writefile( $file, $text, 0644 );
 }
