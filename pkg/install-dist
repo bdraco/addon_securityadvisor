@@ -86,8 +86,6 @@ install(
     "/usr/local/cpanel/whostmgr/docroot/themes/x/icons/ico-security-advisor.png"
 );
 
-_update_inline_licenses("/usr/local/cpanel/Cpanel/Security");
-
 mkdir( "/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor", 0700 );
 
 install(
@@ -98,6 +96,8 @@ install(
 );
 
 chdir("/usr/local/cpanel") or die "Could not chdir to /usr/local/cpanel: $!";
+
+_update_inline_licenses();
 
 system $git_bin, "add", "Cpanel/Security/Advisor", "Cpanel/Security/Advisor.pm", "whostmgr/docroot/themes/x/icons/ico-security-advisor.png", 'whostmgr/docroot/templates/securityadvisor', 'whostmgr/docroot/cgi/securityadvisor/index.cgi';
 
@@ -114,7 +114,6 @@ sub install {
 }
 
 sub _update_inline_licenses {
-    my ($dirpath) = @_;
     Cpanel::SafeFind::find(
         {
             'wanted' => sub {
@@ -125,10 +124,11 @@ sub _update_inline_licenses {
             },
             'no_chdir' => 1
         },
-        $dirpath
-
+        "/usr/local/cpanel/Cpanel/Security",
     );
+
     _update_to_product_license("/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor/index.cgi");
+
 }
 
 sub _update_to_product_license {
@@ -136,6 +136,8 @@ sub _update_to_product_license {
 
     my $shortfile = $file;
     $shortfile =~ s{^/usr/local/cpanel/}{}g;
+
+    print "[$shortfile]\n";
 
     my $license = <<'EOM';
 
@@ -152,6 +154,12 @@ EOM
 
     Cpanel::FileUtils::Write::writefile( $file, $text, 0644 );
 
-    system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-b', $file;
+    if ( $file =~ m/\.cgi$/ ) {
+        system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-x', '-b', $file;
+    }
+    else {
+        system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-b', $file;
+    }
+
     unlink("$file.bak");
 }
