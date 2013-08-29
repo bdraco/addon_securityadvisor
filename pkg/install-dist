@@ -128,6 +128,7 @@ sub _update_inline_licenses {
         $dirpath
 
     );
+    _update_to_product_license("/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor/index.cgi");
 }
 
 sub _update_to_product_license {
