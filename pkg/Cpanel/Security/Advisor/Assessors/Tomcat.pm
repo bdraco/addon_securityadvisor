@@ -38,7 +38,7 @@ sub _is_tomcat5_installed {
     my ($self) = @_;
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    if ( -s '/usr/local/jakarta/tomcat' ) {
+    if ( -l '/usr/local/jakarta/tomcat' ) {
         $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
