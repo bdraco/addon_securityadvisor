@@ -25,8 +25,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use Cwd             ();
-use Cpanel::Version ();
+use Cwd                      ();
+use Cpanel::Version          ();
+use Cpanel::SafeFind         ();
+use Cpanel::LoadFile         ();
+use Cpanel::FileUtils::Write ();
 
 if ( $Cpanel::Version::MAJORVERSION < 11.34 ) {
     #
@@ -83,6 +86,8 @@ install(
     "/usr/local/cpanel/whostmgr/docroot/themes/x/icons/ico-security-advisor.png"
 );
 
+_update_inline_licenses("/usr/local/cpanel/Cpanel/Security");
+
 mkdir( "/usr/local/cpanel/whostmgr/docroot/cgi/securityadvisor", 0700 );
 
 install(
@@ -108,3 +113,44 @@ sub install {
     system( "/usr/bin/install", @_ );
 }
 
+sub _update_inline_licenses {
+    my ($dirpath) = @_;
+    Cpanel::SafeFind::find(
+        {
+            'wanted' => sub {
+                if ( $_ =~ m{\.pm$} && $_ =~ m{Advisor} ) {
+                    _update_to_product_license($File::Find::name);
+                }
+
+            },
+            'no_chdir' => 1
+        },
+        $dirpath
+
+    );
+}
+
+sub _update_to_product_license {
+    my ($file) = @_;
+
+    my $shortfile = $file;
+    $shortfile =~ s{^/usr/local/cpanel/}{}g;
+
+    my $license = <<'EOM';
+
+# cpanel - %FILE%                   Copyright(c) 2013 cPanel, Inc.
+#                                                           All rights Reserved.
+# copyright@cpanel.net                                         http://cpanel.net
+# This code is subject to the cPanel license. Unauthorized copying is prohibited
+EOM
+    $license =~ s/\%FILE\%/$shortfile/g;
+
+    my $text = Cpanel::LoadFile::loadfile($file);
+
+    $text =~ s/\n#[ \t]+Copyright.*?DAMAGE\./$license/s;
+
+    Cpanel::FileUtils::Write::writefile( $file, $text, 0644 );
+
+    system '/usr/local/cpanel//3rdparty/perl/514/bin/perltidy', '-b', $file;
+    unlink("$file.bak");
+}
