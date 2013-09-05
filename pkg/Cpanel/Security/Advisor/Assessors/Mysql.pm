@@ -27,17 +27,18 @@ package Cpanel::Security::Advisor::Assessors::Mysql;
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use strict;
-use Cpanel::Mysql    ();
-use Cpanel::Hostname ();
+use Cpanel::MysqlUtils ();
+use Cpanel::Hostname   ();
+eval { local $SIG{__DIE__}; require Cpanel::MysqlUtils::Connect; };
+
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub generate_advice {
     my ($self) = @_;
 
-    $self->{msq} = Cpanel::Mysql->new();
+    eval { Cpanel::MysqlUtils::Connect::connect(); } if $INC{'Cpanel/MysqlUtils/Connect.pm'};
 
-    # check if we can connect to dbh
-    if ( !$self->_check_for_mysql_connection ) {
+    if ( !Cpanel::MysqlUtils::sqlcmd('SELECT 1;') ) {
         $self->add_bad_advice(
             'text'       => ['Cannot connect to MySQL server.'],
             'suggestion' => [
@@ -57,24 +58,11 @@ sub generate_advice {
     return 1;
 }
 
-sub dbh {
-    my $self = shift;
-
-    return $self->{msq}->{dbh};
-}
-
-sub _check_for_mysql_connection {
-    my $self = shift;
-
-    my $dbh = $self->dbh();
-    return $dbh && ref $dbh && $dbh->ping();
-}
-
 sub _check_for_db_test {
 
     my $self = shift;
 
-    my ($exists) = $self->dbh->selectrow_array(qq{show databases like 'test'});
+    my $exists = Cpanel::MysqlUtils::sqlcmd(qq{show databases like 'test'});
 
     if ( !$exists ) {
         $self->add_good_advice( text => "MySQL test database doesn't exist." );
@@ -96,15 +84,15 @@ sub _check_for_anonymous_users {
     my $self = shift;
 
     my $ok  = 1;
-    my $ano = $self->dbh->selectrow_arrayref(qq{select 1 from mysql.user where user="" limit 1});
-    if ( $ano && $ano->[0] ) {
+    my $ano = Cpanel::MysqlUtils::sqlcmd(qq{select 1 from mysql.user where user="" limit 1});
+    if ($ano) {
         $ok = 0;
     }
 
     for my $h ( 'localhost', Cpanel::Hostname::gethostname ) {
         eval {
-            my ($grant) = $self->dbh->selectrow_array(qq{SHOW GRANTS FOR ''\@'$h'});
-            $ok = 0 if ($grant);
+            my $grant = Cpanel::MysqlUtils::sqlcmd(qq{SHOW GRANTS FOR ''\@'$h'});
+            $ok = 0 if $grant;
         };
     }
 

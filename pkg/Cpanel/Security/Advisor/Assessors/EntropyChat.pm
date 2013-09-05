@@ -43,7 +43,7 @@ sub _check_entropy_chat_enabled {
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    if ( Cpanel::RestartSrv::check_service( 'service' => 'entropychat', 'user' => 'nobody' ) ne '' ) {
+    if ( Cpanel::RestartSrv::check_service( 'service' => 'entropychat', 'user' => 'nobody' ) ) {
         $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
