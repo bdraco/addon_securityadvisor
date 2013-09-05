@@ -76,13 +76,13 @@ sub new {
 
         eval "require $module_name;";
         if ($@) {
-            $self->{'logger'}->("Failed to load $module_name: $@");
+            $self->{'logger'}->warn("Failed to load $module_name: $@");
             $self->_internal_message( { type => 'mod_load', state => 0, module => $module_name, message => "$@" } );
             next;
         }
         my $object = eval { "$module_name"->new($self); };
         if ($@) {
-            $self->{'logger'}->("Failed to new $module_name: $@");
+            $self->{'logger'}->warn("Failed to new $module_name: $@");
             $self->_internal_message( { type => 'mod_load', state => 0, module => $module_name, message => "$@" } );
             next;
         }
