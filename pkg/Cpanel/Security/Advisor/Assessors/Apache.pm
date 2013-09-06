@@ -28,16 +28,17 @@ package Cpanel::Security::Advisor::Assessors::Apache;
 
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
-use Cpanel::Version         ();
-use Cpanel::Config::Sources ();
-use Cpanel::HttpRequest     ();
-use Cpanel::SafeRun::Errors ();
+use Cpanel::Version            ();
+use Cpanel::Config::Sources    ();
+use Cpanel::HttpRequest        ();
+use Cpanel::HttpUtils::Version ();
+use Cpanel::SafeRun::Errors    ();
 
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_apache_chroot();
     $self->_check_for_easyapache_build();
-
+    $self->_check_for_eol_apache();
     return 1;
 }
 
@@ -115,6 +116,28 @@ sub _check_for_easyapache_build {
                 'text'       => ['EasyApache3 has updates available.'],
                 'suggestion' => [
                     '[output,url,_1,EasyApache3,_2,_3] needs to be run periodically to update Apache, PHP and other public server functionality to the latest versions. Updates to EasyApache3 often fix security vulnernabilities in this software.',
+                    $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'),
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    return 1;
+}
+
+sub _check_for_eol_apache {
+    my ($self) = @_;
+    my $security_advisor_obj = $self->{'security_advisor_obj'};
+
+    my $apache_version = Cpanel::HttpUtils::Version::get_httpd_version();
+    if ( $apache_version =~ /^(1\.3|2\.0)/ ) {
+        $security_advisor_obj->add_advice(
+            {
+                'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+                'text'       => ['Your Apache version is EOL (End of Life)'],
+                'suggestion' => [
+                    "Apache v${apache_version} is End of Life (EOL), which means it is no longer updated, and security holes will not be patched. Run [output,url,_1,EasyApache,_2,_3] and choose a newer, supported version.",
                     $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'),
                     'target',
                     '_blank'
