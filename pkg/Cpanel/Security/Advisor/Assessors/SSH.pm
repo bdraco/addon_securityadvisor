@@ -30,6 +30,10 @@ use strict;
 use Whostmgr::Services::SSH::Config ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
+sub version {
+    return '1.00';
+}
+
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_ssh_settings;

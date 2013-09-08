@@ -42,14 +42,21 @@ sub _check_for_unsafe_permissions {
     return if ( $^O ne 'linux' );
 
     my %test_files = (
-        '/etc/shadow' => { 'perms' => 0600, 'uid' => 0, 'gid' => 0 },
-        '/etc/passwd' => { 'perms' => 0644, 'uid' => 0, 'gid' => 0 }
+        '/etc/shadow' => { 'perms' => [ 0200, 0600 ], 'uid' => 0, 'gid' => 0 },
+        '/etc/passwd' => { 'perms' => [0644], 'uid' => 0, 'gid' => 0 }
     );
 
     for my $file ( keys %test_files ) {
         my $expected_attributes = $test_files{$file};
         my ( $current_mode, $uid, $gid ) = ( stat($file) )[ 2, 4, 5 ];
-        if ( ( $expected_attributes->{'perms'} & 07777 ) != ( $current_mode & 07777 ) ) {
+        my $perms_ok = 0;
+        foreach my $allowed_perms ( @{ $expected_attributes->{'perms'} } ) {
+            if ( ( $allowed_perms & 07777 ) == ( $current_mode & 07777 ) ) {
+                $perms_ok = 1;
+                last;
+            }
+        }
+        if ( !$perms_ok ) {
             my $expected_mode = sprintf( "%04o", $expected_attributes->{'perms'} );
             my $actual_mode   = sprintf( "%04o", $current_mode & 07777 );
             $self->add_warn_advice(

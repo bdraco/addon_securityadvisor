@@ -30,6 +30,10 @@ use strict;
 use Cpanel::OSSys ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
+sub version {
+    return '1.00';
+}
+
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_kernel_version;

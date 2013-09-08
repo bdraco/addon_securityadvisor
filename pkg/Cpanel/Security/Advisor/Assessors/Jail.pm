@@ -66,7 +66,7 @@ sub _check_for_unjailed_users {
         delete $wheel_users_hash{'root'};    # We don't care about root being in the wheel group
 
         my $pwcache_ref = Cpanel::PwCache::fetch_pwcache();
-        my @users = map { $_->[0] } grep { exists $cpusers{ $_->[0] } && $_->[8] && $_->[8] !~ m{(?:no|jail)shell} } @$pwcache_ref;    #aka users without jail or noshell
+        my @users = map { $_->[0] } grep { exists $cpusers{ $_->[0] } && $_->[8] && $_->[8] !~ m{(?:false|nologin|(?:no|jail)shell)} } @$pwcache_ref;    #aka users without jail or noshell
         my @users_without_jail;
         my @wheel_users;
 

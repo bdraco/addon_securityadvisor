@@ -28,7 +28,7 @@ package Cpanel::Security::Advisor;
 
 use strict;
 
-our $VERISON = 1.0;
+our $VERSION = 1.02;
 
 use Cpanel::Config::LoadCpConf ();
 use Cpanel::Logger             ();
@@ -63,7 +63,7 @@ sub new {
         'assessors' => \@assessors,
         'logger'    => Cpanel::Logger->new(),
         'cpconf'    => scalar Cpanel::Config::LoadCpConf::loadcpconf(),
-        '_version'  => $VERISON,
+        '_version'  => $VERSION,
         '_cache'    => {},
         'comet'     => $options{'comet'},
         'channel'   => $options{'channel'},
@@ -100,9 +100,13 @@ sub generate_advice {
 
     $self->_internal_message( { type => 'scan_run', state => 0 } );
     foreach my $mod ( @{ $self->{'assessors'} } ) {
-        $self->_internal_message( { type => 'mod_run', state => 0, module => $mod->{name} } );
+        my $module         = $mod->{'name'};
+        my $version_ref    = "$module"->can('version');
+        my $module_version = $version_ref ? $version_ref->() : '';
+
+        $self->_internal_message( { type => 'mod_run', state => 0, module => $mod->{name}, 'version' => $module_version } );
         eval { $mod->{object}->generate_advice(); };
-        $self->_internal_message( { type => 'mod_run', state => ( $@ ? -1 : 1 ), module => $mod->{name}, message => "$@" } );
+        $self->_internal_message( { type => 'mod_run', state => ( $@ ? -1 : 1 ), module => $mod->{name}, message => "$@", 'version' => $module_version } );
     }
     $self->_internal_message( { type => 'scan_run', state => 1 } );
     $self->{'comet'}->purgeclient();
@@ -131,6 +135,7 @@ sub add_advice {
 
     my $module   = $1;
     my $function = $2;
+
     $self->expand_advice_maketext($advice);
     $self->{'comet'}->add_message(
         $self->{'channel'},

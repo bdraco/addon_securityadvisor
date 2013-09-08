@@ -72,7 +72,8 @@ sub run {
         Cpanel::Template::process_template(
             'whostmgr',
             {
-                'template_file' => $template_file,
+                'template_file'            => $template_file,
+                'security_advisor_version' => $Cpanel::Security::Advisor::VERSION,
             },
         );
     }

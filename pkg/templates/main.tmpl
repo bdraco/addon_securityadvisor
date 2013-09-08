@@ -14,12 +14,14 @@ Whostmgr.find_file_url('sharedjs/yui/yui.cometd_optimized.js')
 [% USE JSON %]
 [% USE Dumper %]
 
+
 <table style="width: 0 auto;" width="100%"> 
   <tbody>
     <tr>
-      <td align="left" width="33%">Start Time: <span id="start_time">---</span></td>
-      <td align="center" width="33%"><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button><img id="spinner" style="display:none; margin-bottom: 3px; margin-right: 4px;" align="absmiddle" src="[%- cp_security_token -%]/images/report-spinner.gif" /><span id="current_item">---</span></td>
-      <td align="right" width="33%">Finish Time: <span id="end_time">---</span></td>
+      <td align="left" width="27%">Start Time: <span id="start_time">---</span></td>
+      <td align="center" width="36%"><button type="button" id="scan_button" onclick="scanner.run_scan()">Scan Again</button><img id="spinner" style="display:none; margin-bottom: 3px; margin-right: 4px;" align="absmiddle" src="[%- cp_security_token -%]/images/report-spinner.gif" /><span id="current_item">---</span></td>
+      <td align="center" width="10%">[% locale.maketext("[output,strong,Version:] [_1]", security_advisor_version) %]</td>
+      <td align="right" width="27%">Finish Time: <span id="end_time">---</span></td>
     </tr>
   </tbody>
 </table> 
@@ -128,7 +130,7 @@ Scanner.prototype.parse_comet_message = function(data) {
         }
     }
     else if (data.type == "mod_run") {
-        document.getElementById('current_item').innerHTML = data.module;
+        document.getElementById('current_item').innerHTML = data.module + " " + data.version;
         var current_time = new Date;
         if (data.state == 0) {
         //    message = "<p>Starting checks for " + data.module + "</p>";
