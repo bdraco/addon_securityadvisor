@@ -34,6 +34,10 @@ use Cpanel::HttpRequest        ();
 use Cpanel::HttpUtils::Version ();
 use Cpanel::SafeRun::Errors    ();
 
+sub version {
+    '1.03';
+}
+
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_apache_chroot();
