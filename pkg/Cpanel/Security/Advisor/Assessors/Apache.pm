@@ -35,7 +35,7 @@ use Cpanel::HttpUtils::Version ();
 use Cpanel::SafeRun::Errors    ();
 
 sub version {
-    '1.03';
+    return '1.03';
 }
 
 sub generate_advice {
