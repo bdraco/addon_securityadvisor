@@ -28,16 +28,18 @@ package Cpanel::Security::Advisor::Assessors::SSH;
 
 use strict;
 use Whostmgr::Services::SSH::Config ();
+use Cpanel::SafeFind();
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub version {
-    return '1.00';
+    return '1.01';
 }
 
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_ssh_settings;
     $self->_check_for_ssh_version;
+    $self->_check_for_libkeyutils;
 
     return 1;
 }
@@ -84,7 +86,10 @@ sub _check_for_ssh_settings {
     }
 
     return 1;
+
 }
+
+   
 
 sub _check_for_ssh_version {
     my ($self) = @_;
@@ -119,6 +124,38 @@ sub _check_for_ssh_version {
     }
 
     return 1;
+
 }
+
+sub _check_for_libkeyutils {
+    my ($self) = @_;
+    Cpanel::SafeFind::find(
+        {'wanted' => sub {
+                if ( $File::Find::name =~ /libkeyutils.so/ ) {
+            my $res = Cpanel::SafeRun::Simple::saferun( '/bin/rpm', '-qf', $File::Find::name );
+                        if ($res =~ m/file.*is not owned by any package/) {
+                            $self->add_bad_advice(
+                                'text'          =>  ["Libkeyutils check:  $File::Find::name is not owned by any system packages. This indicates a possibly rooted server."],
+                                'suggestion'    =>  [
+                                    'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
+                                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
+                                   'target',
+                                    '_blank'
+                                ],
+                            );
+                        }
+                        else {
+                            $self->add_good_advice( 'text' => [ "Libkeyutils check:  $File::Find::name is owned by package $res"] );
+                        }
+                }
+            }
+        },
+        "/lib", "/lib64"
+    );
+
+    return 1;
+
+}  
+
 
 1;
