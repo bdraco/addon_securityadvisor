@@ -83,7 +83,7 @@ Scanner.prototype.start_comet_scanner = function(channel) {
             }
         };
 
-        YAHOO.util.Connect.asyncRequest('POST', "", start_scan_callback, "start_scan=1&channel=" + encodeURIComponent(channel) );
+        YAHOO.util.Connect.asyncRequest('POST', window.location.href, start_scan_callback, "start_scan=1&channel=" + encodeURIComponent(channel) );
     });
 
     cometd.handshake();
@@ -151,7 +151,7 @@ Scanner.prototype.parse_comet_message = function(data) {
                         level: advise_notice_type,
                         type: data.advice.type,
                         container: DOM.get('securityadvice_' + advise_notice_type),
-                        content: data.advice.text + (data.advice.suggestion ? ("<blockquote>" + data.advice.suggestion + "</blockquote>") : ""),
+                        content: data.advice.text + (data.advice.suggestion ? ("<blockquote>" + data.advice.suggestion + "</blockquote>") : "")
                 }).show();
     }
     else {
