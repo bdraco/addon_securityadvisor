@@ -1,5 +1,5 @@
 
-/usr/local/cpanel/3rdparty/bin/git clone https://github.com/bdraco/addon_securityadvisor.git
+/usr/local/cpanel/3rdparty/bin/git clone https://github.com/cpanelinc/addon_securityadvisor.git
 
 cd addon_securityadvisor/pkg
 
