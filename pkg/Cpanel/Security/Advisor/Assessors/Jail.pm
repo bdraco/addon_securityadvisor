@@ -44,7 +44,7 @@ sub _check_for_unjailed_users {
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    if ( !-x '/usr/bin/cagefsctl' ) {
+    if ( !-x '/usr/bin/cagefsctl' && !-x '/usr/sbin/cagefsctl' ) {
         if ( -e '/var/cpanel/conf/jail/flags/mount_usr_bin_suid' ) {
             $security_advisor_obj->add_advice(
                 {

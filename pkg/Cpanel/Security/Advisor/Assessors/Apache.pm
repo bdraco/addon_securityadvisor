@@ -43,6 +43,7 @@ sub generate_advice {
     $self->_check_for_apache_chroot();
     $self->_check_for_easyapache_build();
     $self->_check_for_eol_apache();
+    $self->_check_for_symlink_protection();
     return 1;
 }
 
@@ -146,6 +147,252 @@ sub _check_for_eol_apache {
                     'target',
                     '_blank'
                 ],
+            }
+        );
+    }
+    return 1;
+}
+
+sub _check_for_symlink_protection {
+    my ($self) = @_;
+    my @protections;
+    my @protections_issues;
+    my $kernel_type = Cpanel::Security::Advisor::Assessors::get_running_kernel_type();
+    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/local/apache/bin/httpd', '-M' ) ) );
+
+    if ( $kernel_type eq "cloudlinux" ) {
+        $self->_cloudlinux_symlink_protection($ruid);
+    }
+    elsif ( $kernel_type eq "grsec" ) {
+        $self->_grsecurity_symlink_protection();
+    }
+    elsif ( $kernel_type eq "other" ) {
+        $self->_centos_symlink_protection($ruid);
+    }
+    return 1;
+}
+
+sub _centos_symlink_protection {
+    my $self                 = shift;
+    my $ruid                 = shift;
+    my $security_advisor_obj = $self->{'security_advisor_obj'};
+    my $good                 = $Cpanel::Security::Advisor::ADVISE_GOOD;
+    my $info                 = $Cpanel::Security::Advisor::ADVISE_INFO;
+    my $warn                 = $Cpanel::Security::Advisor::ADVISE_WARN;
+    my $bad                  = $Cpanel::Security::Advisor::ADVISE_BAD;
+    my $httpd_binary         = Cpanel::LoadFile::loadfile( '/usr/local/apache/bin/httpd', { 'binmode' => 1 } );
+    my $bluehost             = grep { /SPT_DOCROOT/ } $httpd_binary;
+    my $rack911              = grep { /UnhardenedSymLinks/ } $httpd_binary;
+
+    if ($ruid) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $info,
+                text       => ['Apache Symlink Protection: mod_ruid2 loaded in Apache'],
+                suggestion => [
+                    "mod_ruid2 is enabled in Apache. To ensure that this aids in protecting from symlink attacks, Jailed Apache needs to be enabled. If this not set properly, you should see an indication in Security Advisor (this page) in the sections for “Apache vhosts are not segmented or chroot()ed” and “Users running outside of the jail”. If those are not present, your users should be properly jailed. Review [output,url,_1,Symlink Race Condition Protection,_2,_3] for further information.",
+                    'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    if ($bluehost) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $warn,
+                text       => ['Apache Symlink Protection: the Bluehost provided Apache patch is in effect'],
+                suggestion => [
+                    "It appears that the Bluehost provided Apache patch is being used to provide symlink protection. This is less than optimal. Please review [output,url,_1,Symlink Race Condition Protection,_2,_3].",
+                    'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    if ($rack911) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $warn,
+                text       => ['Apache Symlink Protection: the Rack911 provided Apache patch is in effect'],
+                suggestion => [
+                    "It appears that the Rack911 provided Apache patch is being used to provide symlink protection. This is less than optimal. Please review [output,url,_1,Symlink Race Condition Protection,_2,_3].",
+                    'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
+                    'target',
+                    '_blank',
+                ],
+            }
+        );
+    }
+    if ( !($ruid) && !($rack911) && !($bluehost) ) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $bad,
+                text       => ['No symlink protection detected'],
+                suggestion => [
+                    'You do not appear to have any symlink protection enabled on this server. You can protect against this in multiple ways. Please review the following [output,url,_1,documentation,_2,_3] to find a solution that is suited to your needs.',
+                    'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    return 1;
+}
+
+sub _cloudlinux_symlink_protection {
+    my $self                 = shift;
+    my $ruid                 = shift;
+    my $security_advisor_obj = $self->{'security_advisor_obj'};
+    my $good                 = $Cpanel::Security::Advisor::ADVISE_GOOD;
+    my $info                 = $Cpanel::Security::Advisor::ADVISE_INFO;
+    my $warn                 = $Cpanel::Security::Advisor::ADVISE_WARN;
+    my $bad                  = $Cpanel::Security::Advisor::ADVISE_BAD;
+    my ( $sysctl_fs_enforce_symlinksifowner, $sysctl_fs_symlinkown_gid ) = (
+        Cpanel::SafeRun::Simple::saferun( 'sysctl', '-n', 'fs.enforce_symlinksifowner' ),
+        Cpanel::SafeRun::Simple::saferun( 'sysctl', '-n', 'fs.symlinkown_gid' )
+    );
+    chomp( $sysctl_fs_enforce_symlinksifowner, $sysctl_fs_symlinkown_gid );
+
+    if ( -x '/usr/sbin/cagefsctl' ) {
+        my $uncaged_user_count = split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/sbin/cagefsctl', '--list-disabled' ) );
+        if ( $uncaged_user_count > 0 ) {
+            $security_advisor_obj->add_advice(
+                {
+                    type       => $warn,
+                    text       => ['Apache Symlink Protection: Users with CloudLinux CageFS disabled'],
+                    suggestion => [
+                        "There appear to be users with cagefs disabled on this server. CageFS in combination with other features of Cloudlinux can further increase security. For further information see the [output,url,_1,CageFS Documentation,_2,_3] and the cPanel documentation on [output,url,_4,Symlink Race Condition Protection,_2,_3]. You have [output,strong,_5] uncaged users.",
+                        'http://docs.cloudlinux.com/index.html?cagefs.html',
+                        'target',
+                        '_blank',
+                        'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
+                        "$uncaged_user_count"
+                    ],
+                }
+            );
+        }
+        elsif ( Cpanel::SafeRun::Simple::saferun( '/etc/init.d/cagefs', 'status' ) !~ /running/ ) {
+            $security_advisor_obj->add_advice(
+                {
+                    type       => $warn,
+                    text       => ['Apache Symlink Protection: CloudLinux CageFS is installed but not currently running'],
+                    suggestion => [
+                        "CageFS appears to be installed but is not currently running. CageFS adds filesystem level security to your users by isolating their filesystems from each other and many other parts of the system. You can start CageFS at the command line with “/etc/init.d/cagefs start”. For further information, see the [output,url,_1,CageFS Documentation,_2,_3].",
+                        'http://docs.cloudlinux.com/index.html?cagefs.html',
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
+        }
+        else {
+            $security_advisor_obj->add_advice(
+                {
+                    type       => $good,
+                    text       => ['Apache Symlink Protection: Cloudlinux CageFS protections are in effect'],
+                    suggestion => ['You are running CageFS. This provides filesystem level protections for your users and server.']
+
+                }
+            );
+        }
+    }
+    if ( ($ruid) && ( ( $sysctl_fs_enforce_symlinksifowner !~ /1|2/ ) || ( $sysctl_fs_symlinkown_gid != 99 ) ) ) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $bad,
+                text       => ['Apache Symlink Protection: Problems with CloudLinux sysctl settings'],
+                suggestion => [
+                    "Your sysctl values appear to not be set appropriately for your Apache configuration. To resolve this, please see the documentation on [output,url,_1,SecureLinks,_2,_3]",
+                    'http://docs.cloudlinux.com/index.html?securelinks.html',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    elsif ( !($ruid) && ( ( $sysctl_fs_enforce_symlinksifowner != 1 ) || ( $sysctl_fs_symlinkown_gid != 99 ) ) ) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $bad,
+                text       => ['Apache Symlink Protection: Problems with CloudLinux sysctl settings'],
+                suggestion => [
+                    "Your sysctl values appear to not be set appropriately for your Apache configuration. To resolve this, please see the documentation on [output,url,_1,SecureLinks,_2,_3]",
+                    'http://docs.cloudlinux.com/index.html?securelinks.html',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    else {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $good,
+                text       => ['Apache Symlink Protection: CloudLinux protections are in effect.'],
+                suggestion => [
+                    "You appear to have sufficient protections from Apache Symlink Attacks. If you have not already, consider increasing protection with [output,url,_1,CageFS,_2,_3]. For further information on symlink attack protection see our [output,url,_4,suggestions,_2,_3] on it.",
+                    'http://docs.cloudlinux.com/index.html?cagefs.html',
+                    'target',
+                    '_blank',
+                    'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch'
+                ],
+            }
+        );
+
+    }
+    return 1;
+}
+
+sub _grsecurity_symlink_protection {
+    my $self                 = shift;
+    my $security_advisor_obj = $self->{'security_advisor_obj'};
+    my $good                 = $Cpanel::Security::Advisor::ADVISE_GOOD;
+    my $info                 = $Cpanel::Security::Advisor::ADVISE_INFO;
+    my $warn                 = $Cpanel::Security::Advisor::ADVISE_WARN;
+    my $bad                  = $Cpanel::Security::Advisor::ADVISE_BAD;
+    my ( $sysctl_kernel_grsecurity_symlinkown_gid, $sysctl_kernel_grsecurity_enforce_symlinksifowner ) = (
+        Cpanel::SafeRun::Simple::saferun( 'sysctl', '-n', 'kernel.grsecurity.symlinkown_gid' ),
+        Cpanel::SafeRun::Simple::saferun( 'sysctl', '-n', 'kernel.grsecurity.enforce_symlinksifowner' )
+    );
+    if ( ( $sysctl_kernel_grsecurity_symlinkown_gid =~ /unknown/ ) && ( $sysctl_kernel_grsecurity_enforce_symlinksifowner =~ /unknown/ ) ) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $warn,
+                text       => ['Apache Symlink Protection: Grsecruity does not have the sysctl option enabled'],
+                suggestion => [
+                    "It appears that the sysctl option may not have been selected for the grsec kernel. Due to this, it is not possible to verify the configuration of symlinkown_gid which is the gid of the Apache user that should not follow symlinks. This is usually 99 on cPanel servers. If you are confident that this is correct and do not wish to be able to easily verify your grsecurity kernel options, then you may disregard this message. Otherwise, please visit the [output,url,_1,Grsecurity Documentation,_2,_3] to learn more about enabling the sysctl option during kernel compilation.",
+                    'http://en.wikibooks.org/wiki/Grsecurity/Configuring_and_Installing_grsecurity#Suggestions',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    elsif (( $sysctl_kernel_grsecurity_symlinkown_gid != 99 )
+        || ( $sysctl_kernel_grsecurity_enforce_symlinksifowner != 1 ) ) {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $bad,
+                text       => ['Apache Symlink Protection: Grsecurity sysctl values'],
+                suggestion => [
+                    "It seems that your sysctl keys, enforce_symlinksifowner, and symlinkown_gid, may not be configured correctly for a cPanel server. Typically, enforce_symlinksifowner is set to 1, and symlinkown_gid is set to 99 on a cPanel server. For further information, see the [output,url,_1,Grsecurity Documentation,_2,_3].",
+                    'http://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options#Kernel-enforced_SymlinksIfOwnerMatch',
+                    'target',
+                    '_blank'
+                ],
+            }
+        );
+    }
+    else {
+        $security_advisor_obj->add_advice(
+            {
+                type       => $good,
+                text       => ['Apache Symlink Protection: You are well protected by grsecurity'],
+                suggestion => ["You appear to have sufficient protections from Apache Symlink Attacks"],
             }
         );
     }
