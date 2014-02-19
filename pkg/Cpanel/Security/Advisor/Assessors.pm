@@ -153,4 +153,16 @@ sub get_installed_rpms {
     return $cache->{'installed_rpms'};
 }
 
+sub get_running_kernel_type {
+    my ($kallsyms) = Cpanel::LoadFile::loadfile('/proc/kallsyms');
+
+    my $redhat_release = Cpanel::LoadFile::loadfile('/etc/redhat-release');
+    my $kernel_type =
+        ( ( $kallsyms =~ /\[lve\]/ ) && ( $redhat_release =~ /CloudLinux/ ) ) ? 'cloudlinux'
+      : ( $kallsyms =~ /grsec/ ) ? 'grsec'
+      : ( -e '/etc/redhat-release' ) ? 'other'
+      :                                '';
+    return $kernel_type;
+}
+
 1;
