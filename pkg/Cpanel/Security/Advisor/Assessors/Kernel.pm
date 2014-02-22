@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::Kernel;
 
-# Copyright (c) 2013, cPanel, Inc.
+# Copyright (c) 2014, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -27,11 +27,12 @@ package Cpanel::Security::Advisor::Assessors::Kernel;
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use strict;
-use Cpanel::OSSys ();
 use base 'Cpanel::Security::Advisor::Assessors';
+use Cpanel::SafeRun::Errors ();
+use Cpanel::OSSys           ();
 
 sub version {
-    return '1.00';
+    return '1.01.2';
 }
 
 sub generate_advice {
@@ -44,52 +45,49 @@ sub generate_advice {
 sub _check_for_kernel_version {
     my ($self) = @_;
 
-    my $installed_rpms = $self->get_installed_rpms();
-    my $available_rpms = $self->get_available_rpms();
+    my %kernel_update = kernel_updates();
+    my @kernel_update = ();
+    if ( ( keys %kernel_update ) ) {
+        foreach my $update ( keys %kernel_update ) {
+            unshift( @kernel_update, $kernel_update{$update} );
+        }
+    }
 
+    my $latest_kernelversion  = installed_kernels();
     my $running_kernelversion = ( Cpanel::OSSys::uname() )[2];
-    $running_kernelversion =~ s/\.(?:x86_64|i.86)$//;    #strip arch
-    my $running_kernelversion_without_release = ( split( m/-/, $running_kernelversion ) )[0];
+    $running_kernelversion =~ s/\.(?:noarch|x86_64|i.86)$//;
 
-    my $current_kernelversion = $installed_rpms->{'kernel'};
-    $current_kernelversion =~ s/\.(?:x86_64|i.86)$//;    #strip arch
-
-    my $latest_kernelversion = $available_rpms->{'kernel'};
-    my $latest_kernelversion_without_release = ( split( m/-/, $latest_kernelversion ) )[0];
-    $latest_kernelversion =~ s/\.(?:x86_64|i.86)$//;     #strip arch
-
-    if ( length $current_kernelversion && length $latest_kernelversion ) {
-        if ( $running_kernelversion_without_release ne $latest_kernelversion_without_release ) {
-            $self->add_info_advice( 'text' => [ 'Custom kernel version cannot be checked to see if it is up to date: ' . $running_kernelversion ] );
-        }
-        elsif ( $current_kernelversion ne $latest_kernelversion ) {
-            $self->add_bad_advice(
-                'text'       => ["Current kernel version is out of date. current: $current_kernelversion, expected: $latest_kernelversion"],
-                'suggestion' => [
-                    'Update current system software in the "[output,url,_1,Update System Software,_2,_3]" area, and then reboot the system in the "[output,url,_4,Graceful Server Reboot,_5,_6]" area.',
-                    $self->base_path('scripts/dialog?dialog=updatesyssoftware'),
-                    'target',
-                    '_blank',
-                    $self->base_path('scripts/dialog?dialog=reboot'),
-                    'target',
-                    '_blank'
-                ],
-            );
-        }
-        elsif ( $running_kernelversion ne $latest_kernelversion ) {
-            $self->add_bad_advice(
-                'text'       => ["A newer kernel is installed, however the system has not been rebooted. running: $running_kernelversion, installed: $current_kernelversion"],
-                'suggestion' => [
-                    'Reboot the system in the "[output,url,_1,Graceful Server Reboot,_2,_3]" area.',
-                    $self->base_path('scripts/dialog?dialog=reboot'),
-                    'target',
-                    '_blank'
-                ],
-            );
-        }
-        else {
-            $self->add_good_advice( 'text' => [ 'Current running kernel version is up to date: ' . $current_kernelversion ] );
-        }
+    if ( ( ( ( Cpanel::OSSys::uname() )[2] ) =~ m/\.(?:noarch|x86_64|i.86).+$/ ) ) {
+        $self->add_info_advice( 'text' => [ 'Custom kernel version cannot be checked to see if it is up to date: [_1]', $running_kernelversion ] );
+    }
+    elsif ( (@kernel_update) ) {
+        $self->add_bad_advice(
+            'text' => [
+                'Current kernel version is out of date. running kernel: [_1], most recent kernel: [list_and,_2]',
+                $running_kernelversion,
+                \@kernel_update,
+            ],
+            'suggestion' => ['Update the system’s software by running ’yum update’ from the command line and reboot the system.'],
+        );
+    }
+    elsif ( ( $running_kernelversion ne $latest_kernelversion ) ) {
+        $self->add_bad_advice(
+            'text' => [
+                'A newer kernel is installed, however the system has not been rebooted. running kernel: [_1], most recent installed kernel: [_2]',
+                $running_kernelversion,
+                $latest_kernelversion
+            ],
+            'suggestion' => [
+                'Reboot the system in the "[output,url,_1,Graceful Server Reboot,_2,_3]" area.
+                Check the boot configuration in grub.conf if the new kernel is not loaded after a reboot.',
+                $self->base_path('scripts/dialog?dialog=reboot'),
+                'target',
+                '_blank'
+            ],
+        );
+    }
+    elsif ( ( ( $running_kernelversion eq $latest_kernelversion ) && !(@kernel_update) ) ) {
+        $self->add_good_advice( 'text' => [ 'Current running kernel version is up to date: [_1]', $running_kernelversion ] );
     }
     else {
         $self->add_warn_advice( 'text' => ['Unable to determine kernel version'], 'suggestion' => ['Ensure that yum and rpm are working on your system.'] );
@@ -98,4 +96,50 @@ sub _check_for_kernel_version {
     return 1;
 }
 
+sub kernel_updates {
+    my %kernel_update;
+    my @args         = qw(yum -d 0 info updates kernel);
+    my @yum_response = Cpanel::SafeRun::Errors::saferunnoerror(@args);
+    my ( $rpm, $version, $release );
+
+    foreach my $element ( 0 .. $#yum_response ) {
+        $rpm     = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Name/ ) );
+        $version = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Version/ ) );
+        $release = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Release/ ) );
+        if ( ( ($rpm) && ($version) && ($release) ) ) {
+            s/\s//g foreach ( $rpm, $version, $release );
+            $kernel_update{ $rpm . " " . $version . "-" . $release } = $version . "-" . $release;
+            $rpm                                                     = undef;
+            $version                                                 = undef;
+            $release                                                 = undef;
+        }
+    }
+    return %kernel_update;
+}    # end of sub
+
+sub installed_kernels {
+    my %installed_kernels;
+    my $recent_kernel;
+    my $recent_buildtime = 0;
+    my @args             = ( 'rpm', '-qa', '--queryformat', '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n', 'kernel' );
+    my @rpm_response     = Cpanel::SafeRun::Errors::saferunnoerror(@args);
+    if (@rpm_response) {
+        foreach my $version_check (@rpm_response) {
+            my ( $rpm, $version, $buildtime ) = split( qr/\s+/, $version_check );
+            if ( ($rpm) && ($version) && ( $version =~ m/\d/ ) && ($buildtime) ) {
+                $installed_kernels{$version} = $buildtime;
+            }    # End valid version
+        }    # next rpm and version to check
+    }    # end of if rpm_response
+    foreach my $version ( keys %installed_kernels ) {
+        if ( ( $installed_kernels{$version} > $recent_buildtime ) ) {
+            $recent_kernel    = $version;
+            $recent_buildtime = $installed_kernels{$version};
+        }
+    }
+    return $recent_kernel;
+}
+
 1;
+
+__END__
