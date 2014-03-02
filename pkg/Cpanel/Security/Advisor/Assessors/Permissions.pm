@@ -39,8 +39,6 @@ sub generate_advice {
 sub _check_for_unsafe_permissions {
     my ($self) = @_;
 
-    return if ( $^O ne 'linux' );
-
     my %test_files = (
         '/etc/shadow' => { 'perms' => [ 0200, 0600 ], 'uid' => 0, 'gid' => 0 },
         '/etc/passwd' => { 'perms' => [0644], 'uid' => 0, 'gid' => 0 }
