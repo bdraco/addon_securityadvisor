@@ -30,6 +30,7 @@ use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 use Cpanel::SafeRun::Errors ();
 use Cpanel::OSSys           ();
+use Cpanel::OSSys::Env      ();
 
 sub version {
     return '1.01.2';
@@ -59,6 +60,9 @@ sub _check_for_kernel_version {
 
     if ( ( ( ( Cpanel::OSSys::uname() )[2] ) =~ m/\.(?:noarch|x86_64|i.86).+$/ ) ) {
         $self->add_info_advice( 'text' => [ 'Custom kernel version cannot be checked to see if it is up to date: [_1]', $running_kernelversion ] );
+    }
+    elsif ( Cpanel::OSSys::Env::get_envtype() eq 'virtuozzo' ) {
+        $self->add_info_advice( 'text' => ['Kernel updates are not supported on this virtualization platform. Be sure to keep the host’s kernel up to date.'] );
     }
     elsif ( (@kernel_update) ) {
         $self->add_bad_advice(
