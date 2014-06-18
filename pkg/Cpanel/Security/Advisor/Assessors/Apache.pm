@@ -183,20 +183,31 @@ sub _centos_symlink_protection {
     my $httpd_binary         = Cpanel::LoadFile::loadfile( '/usr/local/apache/bin/httpd', { 'binmode' => 1 } );
     my $bluehost             = grep { /SPT_DOCROOT/ } $httpd_binary;
     my $rack911              = grep { /UnhardenedSymLinks/ } $httpd_binary;
+    my $jailedapache         = $security_advisor_obj->{'cpconf'}->{'jailapache'};
 
     if ($ruid) {
-        $security_advisor_obj->add_advice(
-            {
-                type       => $info,
-                text       => ['Apache Symlink Protection: mod_ruid2 loaded in Apache'],
-                suggestion => [
-                    "mod_ruid2 is enabled in Apache. To ensure that this aids in protecting from symlink attacks, Jailed Apache needs to be enabled. If this not set properly, you should see an indication in Security Advisor (this page) in the sections for “Apache vhosts are not segmented or chroot()ed” and “Users running outside of the jail”. If those are not present, your users should be properly jailed. Review [output,url,_1,Symlink Race Condition Protection,_2,_3] for further information.",
-                    'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
-                    'target',
-                    '_blank'
-                ],
-            }
-        );
+        if ($jailedapache) {
+            $security_advisor_obj->add_advice(
+                {
+                    'type' => $good,
+                    'text' => ['Apache Symlink Protection is enabled'],
+                }
+            );
+        }
+        else {
+            $security_advisor_obj->add_advice(
+                {
+                    type       => $info,
+                    text       => ['Apache Symlink Protection: mod_ruid2 loaded in Apache'],
+                    suggestion => [
+                        "mod_ruid2 is enabled in Apache. To ensure that this aids in protecting from symlink attacks, Jailed Apache needs to be enabled. If this not set properly, you should see an indication in Security Advisor (this page) in the sections for “Apache vhosts are not segmented or chroot()ed” and “Users running outside of the jail”. If those are not present, your users should be properly jailed. Review [output,url,_1,Symlink Race Condition Protection,_2,_3] for further information.",
+                        'http://docs.cpanel.net/twiki/bin/view/EasyApache/Apache/SymlinkPatch',
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
+        }
     }
     if ($bluehost) {
         $security_advisor_obj->add_advice(
