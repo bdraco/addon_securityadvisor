@@ -48,6 +48,8 @@ sub _check_scgiwrap {
     my $suenabled   = ( ( stat $suexec )[2]   || 0 ) & 04000;
     my $scgienabled = ( ( stat $scgiwrap )[2] || 0 ) & 04000;
 
+    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/local/apache/bin/httpd', '-M' ) ) );
+
     if ( $suenabled && !$scgienabled ) {
         $security_advisor_obj->add_advice(
             {
@@ -57,32 +59,52 @@ sub _check_scgiwrap {
         );
     }
     elsif ( $suenabled && $scgienabled ) {
-        $security_advisor_obj->add_advice(
-            {
-                'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['Both SCGI and suEXEC are enabled.'],
-                'suggestion' => [
-                    'On the “[output,url,_1,Configure PHP and suEXEC,_2,_3]” page toggle “Apache suEXEC” off then back on to disable SCGI.',
-                    $self->base_path('scripts2/phpandsuexecconf'),
-                    'target',
-                    '_blank'
-                ],
-            }
-        );
+        if ( !$ruid ) {
+            $security_advisor_obj->add_advice(
+                {
+                    'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+                    'text'       => ['Both SCGI and suEXEC are enabled.'],
+                    'suggestion' => [
+                        'On the “[output,url,_1,Configure PHP and suEXEC,_2,_3]” page toggle “Apache suEXEC” off then back on to disable SCGI.',
+                        $self->base_path('scripts2/phpandsuexecconf'),
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
+        }
+        else {
+            $security_advisor_obj->add_advice(
+                {
+                    'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
+                    'text' => ['SCGI, suEXEC, and mod_ruid2 are enabled.'],
+                }
+            );
+        }
     }
     elsif ( !$suenabled || -f "$suexec.disable" ) {
-        $security_advisor_obj->add_advice(
-            {
-                'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['suEXEC is disabled.'],
-                'suggestion' => [
-                    'Enable suEXEC on the “[output,url,_1,Configure PHP and suEXEC,_2,_3]” page.',
-                    $self->base_path('scripts2/phpandsuexecconf'),
-                    'target',
-                    '_blank'
-                ],
-            }
-        );
+        if ( !$ruid ) {
+            $security_advisor_obj->add_advice(
+                {
+                    'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+                    'text'       => ['suEXEC is disabled.'],
+                    'suggestion' => [
+                        'Enable suEXEC on the “[output,url,_1,Configure PHP and suEXEC,_2,_3]” page.',
+                        $self->base_path('scripts2/phpandsuexecconf'),
+                        'target',
+                        '_blank'
+                    ],
+                }
+            );
+        }
+        else {
+            $security_advisor_obj->add_advice(
+                {
+                    'type' => $Cpanel::Security::Advisor::ADVISE_GOOD,
+                    'text' => ['suEXEC is disabled; however mod_ruid2 is installed.'],
+                }
+            );
+        }
     }
     else {
         $security_advisor_obj->add_advice(
