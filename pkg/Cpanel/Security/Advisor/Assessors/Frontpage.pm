@@ -33,7 +33,7 @@ use Cpanel::SafeRun::Simple;
 sub generate_advice {
     my ($self) = @_;
     $self->_is_frontpage_installed();
-
+    $self->_is_frontpage_in_easyapache();
     return 1;
 }
 
@@ -50,6 +50,28 @@ sub _is_frontpage_installed {
                 'text'       => ['Frontpage is installed'],
                 'suggestion' => [
                     'Rebuild using “[output,url,_1,EasyApache,_2,_3]” without Frontpage selected, then uninstall the Frontpage RPM (rpm -e frontpage)',
+                    $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'), 'target', '_blank',
+                ],
+            }
+        );
+    }
+
+    return 1;
+}
+
+sub _is_frontpage_in_easyapache {
+
+    my ($self) = @_;
+
+    my $security_advisor_obj = $self->{'security_advisor_obj'};
+
+    if ( -e '/usr/local/apache/modules/mod_frontpage.so' || -e '/usr/local/apache/modules/mod_auth_passthrough.so' ) {
+        $security_advisor_obj->add_advice(
+            {
+                'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
+                'text'       => ['Frontpage modules are in EasyApache'],
+                'suggestion' => [
+                    'Rebuild using “[output,url,_1,EasyApache,_2,_3]” without Frontpage selected.',
                     $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'), 'target', '_blank',
                 ],
             }
