@@ -69,9 +69,9 @@ sub _is_frontpage_in_easyapache {
         $security_advisor_obj->add_advice(
             {
                 'type'       => $Cpanel::Security::Advisor::ADVISE_BAD,
-                'text'       => ['Frontpage modules are in EasyApache'],
+                'text'       => ['EasyApache includes Microsoft® Frontpage modules'],
                 'suggestion' => [
-                    'Rebuild using “[output,url,_1,EasyApache,_2,_3]” without Frontpage selected.',
+                    'Rebuild “[output,url,_1,EasyApache,_2,_3]” without Frontpage selected to remove the modules.',
                     $self->base_path('cgi/easyapache.pl?action=_pre_cpanel_sync_screen'), 'target', '_blank',
                 ],
             }
