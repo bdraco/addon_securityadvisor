@@ -1,0 +1,24 @@
+# Ignore perltidy files
+*.bak
+*.ERR
+# Ignore SVN
+*.svn*
+*.pyc
+*.so
+# Ignore tags files.
+tags
+TAGS
+# Ignore GCC generated files
+*.o
+*.gcno
+*.gcda
+gmon.out
+# Ignore perl tidy backup files
+*.tdy
+# Ignore patch files
+*.rej
+*.orig
+# ignore vim swap files.
+*.swp
+# Ignore Apple AFP files
+.DS_Store
