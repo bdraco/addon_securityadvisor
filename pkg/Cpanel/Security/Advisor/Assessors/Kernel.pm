@@ -29,11 +29,11 @@ package Cpanel::Security::Advisor::Assessors::Kernel;
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
 use Cpanel::SafeRun::Errors ();
-use Cpanel::OSSys           ();
+use Cpanel::Kernel          ();
 use Cpanel::OSSys::Env      ();
 
 sub version {
-    return '1.01.2';
+    return '1.01.3';
 }
 
 sub generate_advice {
@@ -54,11 +54,10 @@ sub _check_for_kernel_version {
         }
     }
 
-    my $latest_kernelversion  = installed_kernels();
-    my $running_kernelversion = ( Cpanel::OSSys::uname() )[2];
-    $running_kernelversion =~ s/\.(?:noarch|x86_64|i.86)$//;
+    my $boot_kernelversion    = Cpanel::Kernel::get_default_boot_version();
+    my $running_kernelversion = Cpanel::Kernel::get_running_version();
 
-    if ( ( ( ( Cpanel::OSSys::uname() )[2] ) =~ m/\.(?:noarch|x86_64|i.86).+$/ ) ) {
+    if ( $running_kernelversion =~ m/\.(?:noarch|x86_64|i.86).+$/ ) {
         $self->add_info_advice( 'text' => [ 'Custom kernel version cannot be checked to see if it is up to date: [_1]', $running_kernelversion ] );
     }
     elsif ( Cpanel::OSSys::Env::get_envtype() eq 'virtuozzo' ) {
@@ -74,12 +73,12 @@ sub _check_for_kernel_version {
             'suggestion' => ['Update the system’s software by running ’yum update’ from the command line and reboot the system.'],
         );
     }
-    elsif ( ( $running_kernelversion ne $latest_kernelversion ) ) {
+    elsif ( ( $running_kernelversion ne $boot_kernelversion ) ) {
         $self->add_bad_advice(
             'text' => [
-                'A newer kernel is installed, however the system has not been rebooted. running kernel: [_1], most recent installed kernel: [_2]',
+                'Current kernel version does not match the kernel version for boot. running kernel: [_1], boot kernel: [_2]',
                 $running_kernelversion,
-                $latest_kernelversion
+                $boot_kernelversion
             ],
             'suggestion' => [
                 'Reboot the system in the "[output,url,_1,Graceful Server Reboot,_2,_3]" area.
@@ -117,29 +116,6 @@ sub kernel_updates {
     }
     return %kernel_update;
 }    # end of sub
-
-sub installed_kernels {
-    my %installed_kernels;
-    my $recent_kernel;
-    my $recent_buildtime = 0;
-    my @args             = ( 'rpm', '-qa', '--queryformat', '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n', 'kernel' );
-    my @rpm_response     = Cpanel::SafeRun::Errors::saferunnoerror(@args);
-    if (@rpm_response) {
-        foreach my $version_check (@rpm_response) {
-            my ( $rpm, $version, $buildtime ) = split( qr/\s+/, $version_check );
-            if ( ($rpm) && ($version) && ( $version =~ m/\d/ ) && ($buildtime) ) {
-                $installed_kernels{$version} = $buildtime;
-            }    # End valid version
-        }    # next rpm and version to check
-    }    # end of if rpm_response
-    foreach my $version ( keys %installed_kernels ) {
-        if ( ( $installed_kernels{$version} > $recent_buildtime ) ) {
-            $recent_kernel    = $version;
-            $recent_buildtime = $installed_kernels{$version};
-        }
-    }
-    return $recent_kernel;
-}
 
 1;
 
