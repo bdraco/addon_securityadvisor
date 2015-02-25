@@ -90,11 +90,8 @@ sub _check_for_kernel_version {
             ],
         );
     }
-    elsif ( ( ( $running_kernelversion eq $latest_kernelversion ) && !(@kernel_update) ) ) {
-        $self->add_good_advice( 'text' => [ 'Current running kernel version is up to date: [_1]', $running_kernelversion ] );
-    }
     else {
-        $self->add_warn_advice( 'text' => ['Unable to determine kernel version'], 'suggestion' => ['Ensure that yum and rpm are working on your system.'] );
+        $self->add_good_advice( 'text' => [ 'Current running kernel version is up to date: [_1]', $running_kernelversion ] );
     }
 
     return 1;
