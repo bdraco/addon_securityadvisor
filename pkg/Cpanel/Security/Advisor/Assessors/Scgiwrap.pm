@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::Scgiwrap;
 
-# Copyright (c) 2013, cPanel, Inc.
+# Copyright (c) 2015, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -28,6 +28,7 @@ package Cpanel::Security::Advisor::Assessors::Scgiwrap;
 
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
+use Cpanel::Config::Httpd ();
 
 sub generate_advice {
     my ($self) = @_;
@@ -41,7 +42,14 @@ sub _check_scgiwrap {
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    my $suexec   = "/usr/local/apache/bin/suexec";
+    my $suexec = "/usr/local/apache/bin/suexec";    # In ea3 this is always the same, in ea4 it is determined by the RPM in question.
+    if ( defined &Cpanel::Config::Httpd::is_ea4 ) {
+        if ( Cpanel::Config::Httpd::is_ea4() ) {
+            require Cpanel::ConfigFiles::Apache;
+            $suexec = Cpanel::ConfigFiles::Apache->new()->bin_suexec();
+        }
+    }
+
     my $scgiwrap = "/usr/local/cpanel/cgi-sys/scgiwrap";
 
     #check for sticky bit on file to see if it is enabled or not.
