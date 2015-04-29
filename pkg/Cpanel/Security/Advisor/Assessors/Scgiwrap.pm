@@ -42,11 +42,15 @@ sub _check_scgiwrap {
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    my $suexec = "/usr/local/apache/bin/suexec";    # In ea3 this is always the same, in ea4 it is determined by the RPM in question.
+    # In ea3 these are always the same, in ea4 they are determined by the RPM in question.
+    my $httpd  = "/usr/local/apache/bin/httpd";
+    my $suexec = "/usr/local/apache/bin/suexec";
     if ( defined &Cpanel::Config::Httpd::is_ea4 ) {
         if ( Cpanel::Config::Httpd::is_ea4() ) {
             require Cpanel::ConfigFiles::Apache;
-            $suexec = Cpanel::ConfigFiles::Apache->new()->bin_suexec();
+            my $apacheconf = Cpanel::ConfigFiles::Apache->new();
+            $suexec = $apacheconf->bin_suexec();
+            $httpd  = $apacheconf->bin_httpd();
         }
     }
 
@@ -56,7 +60,7 @@ sub _check_scgiwrap {
     my $suenabled   = ( ( stat $suexec )[2]   || 0 ) & 04000;
     my $scgienabled = ( ( stat $scgiwrap )[2] || 0 ) & 04000;
 
-    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/local/apache/bin/httpd', '-M' ) ) );
+    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( $httpd, '-M' ) ) );
 
     if ( $suenabled && !$scgienabled ) {
         $security_advisor_obj->add_advice(
