@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::Scgiwrap;
 
-# Copyright (c) 2013, cPanel, Inc.
+# Copyright (c) 2015, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -28,6 +28,7 @@ package Cpanel::Security::Advisor::Assessors::Scgiwrap;
 
 use strict;
 use base 'Cpanel::Security::Advisor::Assessors';
+use Cpanel::Config::Httpd ();
 
 sub generate_advice {
     my ($self) = @_;
@@ -41,14 +42,34 @@ sub _check_scgiwrap {
 
     my $security_advisor_obj = $self->{'security_advisor_obj'};
 
-    my $suexec   = "/usr/local/apache/bin/suexec";
+    # In ea3 these are always the same, in ea4 they are determined by the RPM in question.
+    my $httpd  = "/usr/local/apache/bin/httpd";
+    my $suexec = "/usr/local/apache/bin/suexec";
+
+    #check for sticky bit on file to see if it is enabled or not.
+    my $suenabled = ( ( stat $suexec )[2] || 0 ) & 04000;
+
+    if ( defined &Cpanel::Config::Httpd::is_ea4 ) {
+        if ( Cpanel::Config::Httpd::is_ea4() ) {
+            require Cpanel::ConfigFiles::Apache;
+            my $apacheconf = Cpanel::ConfigFiles::Apache->new();
+            $suexec = $apacheconf->bin_suexec();
+            $httpd  = $apacheconf->bin_httpd();
+            if ( -f $suexec ) {
+
+                # patches welcome for more a robust way to do this besides matching getcap output!
+                my $gc = `getcap $suexec`;    # the RPM in ea4 uses capabilities for setuid, not setuid bit
+                $suenabled = $gc =~ m/cap_setgid/ && $gc =~ m/cap_setuid/;
+            }
+        }
+    }
+
     my $scgiwrap = "/usr/local/cpanel/cgi-sys/scgiwrap";
 
     #check for sticky bit on file to see if it is enabled or not.
-    my $suenabled   = ( ( stat $suexec )[2]   || 0 ) & 04000;
     my $scgienabled = ( ( stat $scgiwrap )[2] || 0 ) & 04000;
 
-    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/local/apache/bin/httpd', '-M' ) ) );
+    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( $httpd, '-M' ) ) );
 
     if ( $suenabled && !$scgienabled ) {
         $security_advisor_obj->add_advice(

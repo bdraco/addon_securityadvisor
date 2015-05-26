@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor::Assessors::Apache;
 
-# Copyright (c) 2013, cPanel, Inc.
+# Copyright (c) 2015, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -33,6 +33,7 @@ use Cpanel::Config::Sources    ();
 use Cpanel::HttpRequest        ();
 use Cpanel::HttpUtils::Version ();
 use Cpanel::SafeRun::Errors    ();
+use Cpanel::Config::Httpd      ();
 
 sub version {
     return '1.03';
@@ -111,7 +112,7 @@ sub _check_for_easyapache_build {
     eval { $latest_ea3_version = $httprequest_obj->request( 'host' => $ea_update_server, 'url' => '/cpanelsync/easy/version_easy', 'protocol' => 0, ); };
     chomp($latest_ea3_version);
 
-    my $installed_version = Cpanel::SafeRun::Errors::saferunallerrors( '/usr/local/apache/bin/httpd', '-v' );
+    my $installed_version = Cpanel::SafeRun::Errors::saferunallerrors( _get_httpd_path(), '-v' );
     $installed_version = $installed_version =~ /Cpanel::Easy::Apache v([\d.]+)/s ? $1 : '';
 
     if ( $latest_ea3_version && $installed_version && $latest_ea3_version ne $installed_version ) {
@@ -158,7 +159,7 @@ sub _check_for_symlink_protection {
     my @protections;
     my @protections_issues;
     my $kernel_type = Cpanel::Security::Advisor::Assessors::get_running_kernel_type();
-    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/local/apache/bin/httpd', '-M' ) ) );
+    my ($ruid) = ( grep { /ruid2_module/ } split( /\n/, Cpanel::SafeRun::Simple::saferun( _get_httpd_path(), '-M' ) ) );
 
     if ( $kernel_type eq "cloudlinux" ) {
         $self->_cloudlinux_symlink_protection($ruid);
@@ -180,7 +181,7 @@ sub _centos_symlink_protection {
     my $info                 = $Cpanel::Security::Advisor::ADVISE_INFO;
     my $warn                 = $Cpanel::Security::Advisor::ADVISE_WARN;
     my $bad                  = $Cpanel::Security::Advisor::ADVISE_BAD;
-    my $httpd_binary         = Cpanel::LoadFile::loadfile( '/usr/local/apache/bin/httpd', { 'binmode' => 1 } );
+    my $httpd_binary         = Cpanel::LoadFile::loadfile( _get_httpd_path(), { 'binmode' => 1 } );
     my $bluehost             = grep { /SPT_DOCROOT/ } $httpd_binary;
     my $rack911              = grep { /UnhardenedSymLinks/ } $httpd_binary;
     my $jailedapache         = $security_advisor_obj->{'cpconf'}->{'jailapache'};
@@ -408,6 +409,20 @@ sub _grsecurity_symlink_protection {
         );
     }
     return 1;
+}
+
+my $httpd;
+
+sub _get_httpd_path {
+    return $httpd if defined $httpd;
+    $httpd = '/usr/local/apache/bin/httpd';
+    if ( defined &Cpanel::Config::Httpd::is_ea4 ) {
+        if ( Cpanel::Config::Httpd::is_ea4() ) {
+            require Cpanel::ConfigFiles::Apache;
+            $httpd = Cpanel::ConfigFiles::Apache->new()->bin_httpd();
+        }
+    }
+    return $httpd;
 }
 
 1;
