@@ -34,6 +34,7 @@ use Cpanel::HttpRequest        ();
 use Cpanel::HttpUtils::Version ();
 use Cpanel::SafeRun::Errors    ();
 use Cpanel::Config::Httpd      ();
+use Cpanel::Validate::Username ();
 
 sub version {
     return '1.03';
@@ -270,7 +271,14 @@ sub _cloudlinux_symlink_protection {
     chomp( $sysctl_fs_enforce_symlinksifowner, $sysctl_fs_symlinkown_gid );
 
     if ( -x '/usr/sbin/cagefsctl' ) {
-        my $uncaged_user_count = split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/sbin/cagefsctl', '--list-disabled' ) );
+        my $uncaged_user_count = grep {
+            !/^\d+ disabled/
+
+              # Some additional users that may be installed.
+              && !/^(?:dovenull|polkitd)$/
+              && !Cpanel::Validate::Username::reserved_username_check($_)
+        } split( /\n/, Cpanel::SafeRun::Simple::saferun( '/usr/sbin/cagefsctl', '--list-disabled' ) );
+
         if ( $uncaged_user_count > 0 ) {
             $security_advisor_obj->add_advice(
                 {
