@@ -79,6 +79,7 @@ sub _check_for_unjailed_users {
             }
         }
 
+        @users_without_jail = sort @users_without_jail; # Always notify in the same order
         if ( scalar @users_without_jail > 100 ) {
             splice( @users_without_jail, 100 );
             push @users_without_jail, '..truncated..';
