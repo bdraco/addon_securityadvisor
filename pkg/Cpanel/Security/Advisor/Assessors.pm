@@ -158,7 +158,7 @@ sub get_running_kernel_type {
 
     my $redhat_release = Cpanel::LoadFile::loadfile('/etc/redhat-release');
     my $kernel_type =
-        ( ( $kallsyms =~ /\[lve\]/ ) && ( $redhat_release =~ /CloudLinux/ ) ) ? 'cloudlinux'
+        ( ( $kallsyms =~ /\[(kmod)?lve\]/ ) && ( $redhat_release =~ /CloudLinux/ ) ) ? 'cloudlinux'
       : ( $kallsyms =~ /grsec/ ) ? 'grsec'
       : ( -e '/etc/redhat-release' ) ? 'other'
       :                                '';
