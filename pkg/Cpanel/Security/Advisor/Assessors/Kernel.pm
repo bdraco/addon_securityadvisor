@@ -56,11 +56,12 @@ sub _check_for_kernel_version {
 
     my $boot_kernelversion    = Cpanel::Kernel::get_default_boot_version();
     my $running_kernelversion = Cpanel::Kernel::get_running_version();
+    my $environment           = Cpanel::OSSys::Env::get_envtype();
 
     if ( $running_kernelversion =~ m/\.(?:noarch|x86_64|i.86).+$/ ) {
         $self->add_info_advice( 'text' => [ 'Custom kernel version cannot be checked to see if it is up to date: [_1]', $running_kernelversion ] );
     }
-    elsif ( Cpanel::OSSys::Env::get_envtype() eq 'virtuozzo' ) {
+    elsif ( ( $environment eq 'virtuozzo' ) || ( $environment eq 'lxc' ) ) {
         $self->add_info_advice( 'text' => ['Kernel updates are not supported on this virtualization platform. Be sure to keep the host’s kernel up to date.'] );
     }
     elsif ( (@kernel_update) ) {
