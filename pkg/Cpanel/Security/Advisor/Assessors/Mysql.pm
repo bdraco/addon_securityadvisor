@@ -27,8 +27,12 @@ package Cpanel::Security::Advisor::Assessors::Mysql;
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use strict;
-use Cpanel::MysqlUtils ();
-use Cpanel::Hostname   ();
+use Cpanel::Hostname                ();
+use Cpanel::IP::Loopback            ();
+use Cpanel::IP::Parse               ();
+use Cpanel::MysqlUtils              ();
+use Cpanel::MysqlUtils::MyCnf::Full ();
+use Cpanel::SafeRun::Errors         ();
 eval { local $SIG{__DIE__}; require Cpanel::MysqlUtils::Connect; };
 
 use base 'Cpanel::Security::Advisor::Assessors';
@@ -54,6 +58,7 @@ sub generate_advice {
 
     $self->_check_for_db_test();
     $self->_check_for_anonymous_users();
+    $self->_check_for_public_bind_address();
 
     return 1;
 }
@@ -104,6 +109,71 @@ sub _check_for_anonymous_users {
             text       => "You have some anonymous mysql users",
             suggestion => q{Remove mysql anonymous mysql users: > mysql -e 'drop user ""'}
         );
+    }
+
+    return 1;
+}
+
+sub _check_for_public_bind_address {
+    my $self = shift;
+
+    my $mycnf        = Cpanel::MysqlUtils::MyCnf::Full::etc_my_cnf();
+    my $bind_address = $mycnf->{'mysqld'}->{'bind-address'};
+    my $port         = $mycnf->{'mysqld'}->{'port'} || '3306';
+
+    my @deny_rules   = grep { /--dport \Q$port\E/ && /-j (DROP|REJECT)/ } split /\n/, Cpanel::SafeRun::Errors::saferunnoerror( '/sbin/iptables',  '--list-rules' );
+    my @deny_rules_6 = grep { /--dport \Q$port\E/ && /-j (DROP|REJECT)/ } split /\n/, Cpanel::SafeRun::Errors::saferunnoerror( '/sbin/ip6tables', '--list-rules' );
+
+    # From: http://dev.mysql.com/doc/refman/5.5/en/server-options.html
+    # The server treats different types of addresses as follows:
+    #
+    # If the address is *, the server accepts TCP/IP connections on all server
+    # host IPv6 and IPv4 interfaces if the server host supports IPv6, or accepts
+    # TCP/IP connections on all IPv4 addresses otherwise. Use this address to
+    # permit both IPv4 and IPv6 connections on all server interfaces. This value
+    # is permitted (and is the default) as of MySQL 5.6.6.
+    #
+    # If the address is 0.0.0.0, the server accepts TCP/IP connections on all
+    # server host IPv4 interfaces. This is the default before MySQL 5.6.6.
+    #
+    # If the address is ::, the server accepts TCP/IP connections on all server
+    # host IPv4 and IPv6 interfaces.
+    #
+    # If the address is an IPv4-mapped address, the server accepts TCP/IP
+    # connections for that address, in either IPv4 or IPv6 format. For example,
+    # if the server is bound to ::ffff:127.0.0.1, clients can connect using
+    # --host=127.0.0.1 or --host=::ffff:127.0.0.1.
+    #
+    # If the address is a “regular” IPv4 or IPv6 address (such as 127.0.0.1 or
+    # ::1), the server accepts TCP/IP connections only for that IPv4 or IPv6
+    # address.
+
+    if ( defined($bind_address) ) {
+        my $version = ( Cpanel::IP::Parse::parse($bind_address) )[0];
+
+        if ( Cpanel::IP::Loopback::is_loopback($bind_address) ) {
+            $self->add_good_advice( text => "MySQL is listening only on a local address." );
+        }
+        elsif ( ( ( $version == 4 ) && @deny_rules && ( ( $bind_address =~ /ffff/i ) ? @deny_rules_6 : 1 ) ) || ( ( $version == 6 ) && @deny_rules_6 ) ) {
+            $self->add_good_advice( text => "The MySQL port is blocked by the firewall, effectively allowing only local connections." );
+        }
+        else {
+            $self->add_bad_advice(
+                text       => "The MySQL service is currently configured to listen on a public address: (bind-address=$bind_address)",
+                suggestion => 'Configure bind-address=127.0.0.1 in /etc/my.cnf',
+            );
+        }
+    }
+    else {
+        if ( @deny_rules && @deny_rules_6 ) {
+            $self->add_good_advice( text => "The MySQL port is blocked by the firewall, effectively allowing only local connections." );
+        }
+        else {
+            $self->add_bad_advice(
+                text       => 'The MySQL service is currently configured to listen on all interfaces: (bind-address=*)',
+                suggestion => 'Configure bind-address=127.0.0.1 in /etc/my.cnf',
+            );
+        }
     }
 
     return 1;
