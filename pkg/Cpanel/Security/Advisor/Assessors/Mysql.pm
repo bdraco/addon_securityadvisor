@@ -42,7 +42,7 @@ sub generate_advice {
 
     eval { Cpanel::MysqlUtils::Connect::connect(); } if $INC{'Cpanel/MysqlUtils/Connect.pm'};
 
-    if ( !Cpanel::MysqlUtils::sqlcmd('SELECT 1;') ) {
+    if ( !$self->_sqlcmd('SELECT 1;') ) {
         $self->add_bad_advice(
             'text'       => ['Cannot connect to MySQL server.'],
             'suggestion' => [
@@ -63,11 +63,16 @@ sub generate_advice {
     return 1;
 }
 
+sub _sqlcmd {
+    my ( $self, $cmd ) = @_;
+    return Cpanel::MysqlUtils::sqlcmd( $cmd, { quiet => 1 } );
+}
+
 sub _check_for_db_test {
 
     my $self = shift;
 
-    my $exists = Cpanel::MysqlUtils::sqlcmd(qq{show databases like 'test'});
+    my $exists = $self->_sqlcmd(qq{show databases like 'test'});
 
     if ( !$exists ) {
         $self->add_good_advice( text => "MySQL test database doesn't exist." );
@@ -89,14 +94,14 @@ sub _check_for_anonymous_users {
     my $self = shift;
 
     my $ok  = 1;
-    my $ano = Cpanel::MysqlUtils::sqlcmd(qq{select 1 from mysql.user where user="" limit 1});
+    my $ano = $self->_sqlcmd(qq{select 1 from mysql.user where user="" limit 1});
     if ($ano) {
         $ok = 0;
     }
 
     for my $h ( 'localhost', Cpanel::Hostname::gethostname ) {
         eval {
-            my $grant = Cpanel::MysqlUtils::sqlcmd(qq{SHOW GRANTS FOR ''\@'$h'});
+            my $grant = $self->_sqlcmd(qq{SHOW GRANTS FOR ''\@'$h'});
             $ok = 0 if $grant;
         };
     }
