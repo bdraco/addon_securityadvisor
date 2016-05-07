@@ -1,6 +1,6 @@
 package Cpanel::Security::Advisor;
 
-# Copyright (c) 2013, cPanel, Inc.
+# Copyright (c) 2016, cPanel, Inc.
 # All rights reserved.
 # http://cpanel.net
 #
@@ -26,6 +26,37 @@ package Cpanel::Security::Advisor;
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+Cpanel::Security::Advisor - cPanel Security Advisor
+
+=head1 SYNOPSYS
+
+    my $comet = Cpanel::Comet::Mock->new();
+
+    Cpanel::LoadModule::load_perl_module('Cpanel::Security::Advisor');
+    my $advisor = Cpanel::Security::Advisor->new( 'comet' => $comet, 'channel' => $CHANNEL );
+
+    my ( $merged, @result ) = Capture::Tiny::capture_merged(
+        sub {
+            $advisor->generate_advice();
+        }
+    );
+
+    my $msgs = $comet->get_messages($CHANNEL);
+    foreach my $msg ( @{$msgs} ) {
+        my $msg_ref = Cpanel::AdminBin::Serializer::Load($msg);
+
+        ....
+
+    }
+
+=cut
+
 use strict;
 
 our $VERSION = 1.03;
@@ -39,6 +70,54 @@ our $ADVISE_GOOD = 1;
 our $ADVISE_INFO = 2;
 our $ADVISE_WARN = 4;
 our $ADVISE_BAD  = 8;
+
+=head1 ADVISE TYPES
+
+=head2 ADVISE_GOOD
+
+=over
+
+Changes DO NOT send iContact notices
+
+=back
+
+All is well
+
+=head2 ADVISE_INFO
+
+=over
+
+Changes send iContact notices for 11.56.0.14 and below, Changes DO NOT send iContact notices for 11.56.0.15 and above
+
+=back
+
+For items that may not be be actionable soon but should know about.
+If there is uncertainty if the admin has control over the item or
+if we have less than 90% confidence that its not a false positive.
+
+=head2 ADVISE_WARN
+
+=over
+
+Changes send iContact notices
+
+=back
+
+For items that should be actioned soon.  These should be
+95% confidence or better that it is not a false positive.
+
+=head2 ADVISE_BAD
+
+=over
+
+Changes send iContact notices
+
+=back
+
+For items that should be actioned now.  These should be 99%
+confidence or better that it is not a false positive.
+
+=cut
 
 sub new {
     my ( $class, %options ) = @_;
