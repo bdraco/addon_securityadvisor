@@ -32,8 +32,10 @@ use Cpanel::SafeRun::Errors ();
 use Cpanel::Kernel          ();
 use Cpanel::OSSys::Env      ();
 
+my $kc_kernelversion = kcare_kernel_version("uname");
+
 sub version {
-    return '1.01.3';
+    return '1.02';
 }
 
 sub generate_advice {
@@ -64,6 +66,28 @@ sub _check_for_kernel_version {
     elsif ( ( $environment eq 'virtuozzo' ) || ( $environment eq 'lxc' ) ) {
         $self->add_info_advice( 'text' => ['Kernel updates are not supported on this virtualization platform. Be sure to keep the host’s kernel up to date.'] );
     }
+    elsif ( (@kernel_update) && ($kc_kernelversion) ) {
+        if ( kcare_kernel_version("check") eq "New version available" ) {
+            $self->add_bad_advice(
+                'text' => [
+                    'Kernel patched with KernelCare, but out of date. running kernel: [_1], most recent kernel: [list_and,_2]',
+                    $kc_kernelversion,
+                    \@kernel_update,
+                ],
+                'suggestion' => ['This can be resolved either by running ’/usr/bin/kcarectl --update’ from the command line to begin an update of the KernelCare kernel version, or by running ’yum update’ from the command line and rebooting the system.'],
+            );
+        }
+        else {
+            $self->add_info_advice(
+                'text' => [
+                    'Kernel patched with KernelCare, but awaiting further updates. running kernel: [_1], most recent kernel: [list_and,_2]',
+                    $kc_kernelversion,
+                    \@kernel_update,
+                ],
+                'suggestion' => ['The kernel will likely be patched to the current version within the next few days. If this delay is unacceptable, update the system’s software by running ’yum update’ from the command line and reboot the system.'],
+            );
+        }
+    }
     elsif ( (@kernel_update) ) {
         $self->add_bad_advice(
             'text' => [
@@ -73,6 +97,9 @@ sub _check_for_kernel_version {
             ],
             'suggestion' => ['Update the system’s software by running ’yum update’ from the command line and reboot the system.'],
         );
+    }
+    elsif ($kc_kernelversion) {
+        $self->add_good_advice( 'text' => [ 'KernelCare is installed and current running kernel version is up to date: [_1]', $kc_kernelversion ] );
     }
     elsif ( ( $running_kernelversion ne $boot_kernelversion ) ) {
         $self->add_bad_advice(
@@ -101,22 +128,41 @@ sub kernel_updates {
     my %kernel_update;
     my @args         = qw(yum -d 0 info updates kernel);
     my @yum_response = Cpanel::SafeRun::Errors::saferunnoerror(@args);
-    my ( $rpm, $version, $release );
+    my ( $rpm, $arch, $version, $release );
 
     foreach my $element ( 0 .. $#yum_response ) {
         $rpm     = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Name/ ) );
+        $arch    = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Arch/ ) );
         $version = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Version/ ) );
         $release = ( split( /:/, $yum_response[$element] ) )[1] if ( ( $yum_response[$element] =~ m/^Release/ ) );
-        if ( ( ($rpm) && ($version) && ($release) ) ) {
-            s/\s//g foreach ( $rpm, $version, $release );
-            $kernel_update{ $rpm . " " . $version . "-" . $release } = $version . "-" . $release;
-            $rpm                                                     = undef;
-            $version                                                 = undef;
-            $release                                                 = undef;
+        if ( ( ($rpm) && ($arch) && ($version) && ($release) ) ) {
+            s/\s//g foreach ( $rpm, $arch, $version, $release );
+            if ( $kc_kernelversion ne ( $version . "-" . $release . "." . $arch ) ) {
+                $kernel_update{ $rpm . " " . $version . "-" . $release } = $version . "-" . $release . "." . $arch;
+                $rpm                                                     = undef;
+                $arch                                                    = undef;
+                $version                                                 = undef;
+                $release                                                 = undef;
+            }
         }
     }
+
     return %kernel_update;
 }    # end of sub
+
+sub kcare_kernel_version {
+    my @args;
+    my $kc_response = "";
+
+    if ( -f "/usr/bin/kcarectl" ) {
+        @args = ( "/usr/bin/kcarectl", "--" . "$_[0]" );
+        $kc_response = Cpanel::SafeRun::Errors::saferunnoerror(@args);
+        $kc_response =~ s/\+$//;
+        chomp $kc_response;
+    }
+
+    return $kc_response;
+}
 
 1;
 
