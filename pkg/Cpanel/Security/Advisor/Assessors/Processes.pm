@@ -49,6 +49,9 @@ sub _check_for_outdated_processes {
     # Prior to CentOS 6, the yum-utils package did not come with /usr/bin/needs-restarting
     return if Cpanel::Sys::OS::getreleaseversion() < 6;
 
+    # needs-restarting won't work without smaps support (Disabled in grsec kernels).
+    return if !-e qq{/proc/$$/smaps};
+
     # Find the needs-restarting executable, if available.
     my $package_install_cmd = 'yum install yum-utils';
     my $command             = 'needs-restarting';
