@@ -64,7 +64,9 @@ sub _check_scgiwrap {
         }
     }
 
-    my $scgiwrap = "/usr/local/cpanel/cgi-sys/scgiwrap";
+    # DEPRECATED_1158
+    my $scgiwrap = '/usr/local/cpanel/cgi-sys/scgiwrap';
+    $scgiwrap .= '_deprecated' if $Cpanel::Version::MAJORVERSION > 11.57;
 
     #check for sticky bit on file to see if it is enabled or not.
     my $scgienabled = ( ( stat $scgiwrap )[2] || 0 ) & 04000;
