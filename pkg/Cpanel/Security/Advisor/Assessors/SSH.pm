@@ -69,7 +69,7 @@ sub _check_for_ssh_settings {
         $self->add_bad_advice(
             'text'       => ['SSH direct root logins are permitted.'],
             'suggestion' => [
-                'Manually edit /etc/ssh/sshd_config and change PermitRootLogin to “no”, then restart SSH in the “[output,url,_1,Restart SSH,_2,_3]” area',
+                'Manually edit /etc/ssh/sshd_config and change PermitRootLogin to “without-password” or “no”, then restart SSH in the “[output,url,_1,Restart SSH,_2,_3]” area',
                 $self->base_path('scripts/ressshd'),
                 'target',
                 '_blank'
